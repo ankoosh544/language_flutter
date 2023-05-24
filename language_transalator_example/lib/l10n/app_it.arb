@@ -1,0 +1,14 @@
+{
+  "login": "LogIn",
+ 
+  "home": "Iniziale!",
+  "profile" : "Profilo",
+  "settings" : "Impostazioni",
+  "settingsstatement1" : "Messaggi da smartphone",
+  "settingsstatement2" : "Comando agli smartphone",
+
+  "emergencycontacts" : "Contatti di emergenza",
+  "logout" : "Disconnettersi",
+  "error" : "Errore",
+  "loginerrormsg" : "Credenziali di accesso non valide."
+}

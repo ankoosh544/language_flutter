@@ -1,0 +1,13 @@
+{
+  "login" : "LogIn",
+  
+  "home": "Home",
+  "profile" : "Profile",
+  "settings" : "Settings",
+  "settingsstatement1" : "Messages from SmartPhones",
+  "settingsstatement2" : "Command to SmartPhones",
+  "emergencycontacts" : "Emergency Contacts",
+  "logout" : "LogOut",
+  "error": "ERROR",
+  "loginerrormsg" : "Invalid Login Credentials."
+}
