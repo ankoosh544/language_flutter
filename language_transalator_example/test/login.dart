@@ -1,27 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:language_transalator_example/components/mybutton.dart';
 import 'package:language_transalator_example/components/text_field.dart';
+import 'package:language_transalator_example/screens/emergencty_contacts_screen.dart';
 import 'package:language_transalator_example/screens/home_screen.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:language_transalator_example/screens/login_screen.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:language_transalator_example/screens/registration_screen.dart';
 
-class RegistrationScreen extends StatefulWidget {
-  const RegistrationScreen({super.key});
+import 'package:flutter_gen/gen_l10n/app_localizations.dart' as gen;
+
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({Key? key}) : super(key: key);
 
   @override
-  State<RegistrationScreen> createState() => _RegistrationScreenState();
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _RegistrationScreenState extends State<RegistrationScreen> {
-  final TextEditingController usernameController = TextEditingController();
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController phoneNumberController = TextEditingController();
-
-  final TextEditingController passwordController = TextEditingController();
-  PageController pageController = PageController(initialPage: 0);
-  bool isPasswordVisible =
-      false; // Moved outside the _buildLoginScreen() method
+class _LoginScreenState extends State<LoginScreen> {
+  final emailTextController = TextEditingController();
+  final passwordTextController = TextEditingController();
+  bool isPasswordVisible = false;
 
   void _homePage() {
     Navigator.pop(context);
@@ -34,25 +30,51 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     );
   }
 
-  void _gotoLoginPage() {
-    Navigator.pop(context);
+  void performLogin() {
+    // Retrieve entered email and password
+    String email = emailTextController.text;
+    String password = passwordTextController.text;
 
+    // Perform login logic here (e.g., calling an API, validating credentials)
+
+    // If login is successful, navigate to the homepage
+    if (email.isNotEmpty && password.isNotEmpty) {
+      _homePage();
+    } else {
+      // Handle invalid login credentials or other error cases
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(gen.AppLocalizations.of(context)!.error),
+          content: Text(gen.AppLocalizations.of(context)!.loginerrormsg),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text('OK'),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
+  void _registerPage() {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => LoginScreen(),
+        builder: (context) => RegistrationScreen(),
       ),
     );
   }
 
-  Future<void> _registerUser(BuildContext context) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString('userName', usernameController.text);
-    await prefs.setString('email', emailController.text);
-    await prefs.setString('phoneNumber', phoneNumberController.text);
-    Navigator.pushReplacement(
+  void _emergencyContactsPage() {
+    Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => HomeScreen()),
+      MaterialPageRoute(
+        builder: (context) => EmergencyContactsScreen(),
+      ),
     );
   }
 
@@ -71,12 +93,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       ),
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        body: PageView(
-          controller: pageController,
-          children: [
-            _buildLoginScreen(),
-          ],
-        ),
+        body: _buildLoginScreen(),
       ),
     );
   }
@@ -93,24 +110,16 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               height: 50,
             ),
             MyTextField(
-              controller: usernameController,
-              hintText: AppLocalizations.of(context)!.username,
+              controller: emailTextController,
+              hintText: 'Email',
               obscureText: false,
             ),
             const SizedBox(
               height: 10,
             ),
             MyTextField(
-              controller: emailController,
-              hintText: AppLocalizations.of(context)!.email,
-              obscureText: false,
-            ),
-            const SizedBox(
-              height: 10,
-            ),
-            MyTextField(
-              controller: passwordController,
-              hintText: AppLocalizations.of(context)!.password,
+              controller: passwordTextController,
+              hintText: 'Password',
               obscureText: !isPasswordVisible,
               suffixIcon: IconButton(
                 icon: Icon(
@@ -125,19 +134,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               ),
             ),
             const SizedBox(
-              height: 10,
-            ),
-            MyTextField(
-              controller: phoneNumberController,
-              hintText: AppLocalizations.of(context)!.phone,
-              obscureText: false,
-            ),
-            const SizedBox(
               height: 50,
             ),
             MyButton(
-              onTap: () => _registerUser(context),
-              text: AppLocalizations.of(context)!.register,
+              onTap: performLogin,
+              text: gen.AppLocalizations.of(context)!.login,
             ),
             const SizedBox(
               height: 15,
@@ -146,24 +147,39 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Text(
-                  "Already hava an Account?",
+                  "Not Remember Password?",
                   style: TextStyle(color: Colors.white),
                 ),
                 const SizedBox(
                   width: 5,
                 ),
                 GestureDetector(
-                  onTap: () {
-                    _gotoLoginPage();
-                  },
+                  onTap: _registerPage,
                   child: const Text(
-                    "Login",
+                    "Register Now",
                     style: TextStyle(
                         fontWeight: FontWeight.bold, color: Colors.white),
                   ),
                 ),
               ],
             ),
+            const SizedBox(
+              height: 100,
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                GestureDetector(
+                  onTap: _emergencyContactsPage,
+                  child: const Text(
+                    "EmergencyContacts",
+                    style: TextStyle(
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            )
           ],
         ),
       ),
@@ -174,9 +190,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     return Container(
       decoration: BoxDecoration(
         border: Border.all(color: Colors.white, width: 2),
-        shape: BoxShape.rectangle,
+        shape: BoxShape.circle,
       ),
-      child: const Icon(Icons.app_registration, color: Colors.white, size: 120),
+      child: const Icon(Icons.person, color: Colors.white, size: 120),
     );
   }
 }

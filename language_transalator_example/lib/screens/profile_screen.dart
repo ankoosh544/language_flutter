@@ -1,7 +1,40 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart' as gen;
+import 'package:shared_preferences/shared_preferences.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
+  @override
+  _ProfileScreenState createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  String? userName;
+  String? email;
+  String? phoneNumber;
+
+  @override
+  void initState() {
+    super.initState();
+    loadProfileData();
+  }
+
+  Future<void> loadProfileData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    setState(() {
+      userName = prefs.getString('userName');
+      email = prefs.getString('email');
+      phoneNumber = prefs.getString('phoneNumber');
+    });
+  }
+
+  Future<void> saveProfileData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('userName', userName!);
+    await prefs.setString('email', email!);
+    await prefs.setString('phoneNumber', phoneNumber!);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -19,37 +52,26 @@ class ProfileScreen extends StatelessWidget {
             ),
             SizedBox(height: 16.0),
             Text(
-              'John Doe',
+              userName ?? 'UserName',
               style: TextStyle(
                 fontSize: 24.0,
                 fontWeight: FontWeight.bold,
               ),
             ),
             SizedBox(height: 8.0),
-            Text(
-              'Software Engineer',
-              style: TextStyle(
-                fontSize: 18.0,
-                color: Colors.grey,
-              ),
-            ),
             SizedBox(height: 16.0),
             ListTile(
               leading: Icon(Icons.email),
-              title: Text('john.doe@example.com'),
+              title: Text(email ?? 'Email'),
             ),
             ListTile(
               leading: Icon(Icons.phone),
-              title: Text('+1 123-456-7890'),
-            ),
-            ListTile(
-              leading: Icon(Icons.location_on),
-              title: Text('New York, USA'),
+              title: Text(phoneNumber ?? 'PhoneNumber'),
             ),
             SizedBox(height: 16.0),
             ElevatedButton(
               onPressed: () {
-                // Handle button press
+                // Navigate to the edit profile screen
               },
               child: Text('Edit Profile'),
             ),

@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:language_transalator_example/router/custom_router.dart';
 import 'package:language_transalator_example/router/route_constants.dart';
-import 'package:language_transalator_example/screens/home_screen.dart';
-
-import 'package:language_transalator_example/screens/login_screen.dart';
-import 'package:get/get.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
@@ -52,6 +48,7 @@ class _MyAppState extends State<MyApp> {
       supportedLocales: const [
         Locale('en'), // English
         Locale('it'), // Italian
+        Locale('es'), // Spanish
       ],
       locale: _locale,
       onGenerateRoute: CustomRouter.generatedRoute,

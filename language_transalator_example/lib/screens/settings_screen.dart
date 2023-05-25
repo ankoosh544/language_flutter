@@ -1,141 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../components/language.dart';
 import '../main.dart';
-
-// // class SettingsScreen extends StatefulWidget {
-// //   @override
-// //   _SettingsScreenState createState() => _SettingsScreenState();
-// // }
-
-// // class _SettingsScreenState extends State<SettingsScreen> {
-// //   @override
-// //   Widget build(BuildContext context) {
-// //     return Scaffold(
-// //       appBar: AppBar(
-// //         title: Text(AppLocalizations.of(context)!.settings),
-// //         actions: <Widget>[
-// //           Container(
-// //             child: Padding(
-// //               padding: EdgeInsets.all(10.0),
-// //               child: DropdownButton<Language>(
-// //                 underline: SizedBox(),
-// //                 icon: Icon(
-// //                   Icons.language,
-// //                   color: Colors.black,
-// //                 ),
-// //                 onChanged: (Language? language) {
-// //                   if (language != null) {
-// //                     MyApp.setLocale(context, Locale(language.languageCode, ''));
-// //                   }
-// //                 },
-// //                 items: Language.languageList()
-// //                     .map<DropdownMenuItem<Language>>(
-// //                       (e) => DropdownMenuItem<Language>(
-// //                         value: e,
-// //                         child: Row(
-// //                           mainAxisAlignment: MainAxisAlignment.spaceAround,
-// //                           children: <Widget>[
-// //                             Text(
-// //                               e.flag,
-// //                               style: TextStyle(fontSize: 30),
-// //                             ),
-// //                             Text(e.name),
-// //                           ],
-// //                         ),
-// //                       ),
-// //                     )
-// //                     .toList(),
-// //               ),
-// //             ),
-// //           ),
-// //         ],
-// //       ),
-// //       body: const Padding(
-// //         padding: EdgeInsets.all(16.0),
-// //         child: Column(
-// //           crossAxisAlignment: CrossAxisAlignment.start,
-// //           children: [
-// //             Text(
-// //               'Language',
-// //               style: TextStyle(
-// //                 fontSize: 18,
-// //                 fontWeight: FontWeight.bold,
-// //               ),
-// //             ),
-// //             SizedBox(height: 8),
-// //           ],
-// //         ),
-// //       ),
-// //     );
-// //   }
-// // }
-
-// import 'package:flutter/material.dart';
-// import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-
-// import '../components/language.dart';
-// import '../main.dart';
-
-// class SettingsScreen extends StatefulWidget {
-//   @override
-//   _SettingsScreenState createState() => _SettingsScreenState();
-// }
-
-// class _SettingsScreenState extends State<SettingsScreen> {
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(
-//         title: Text(AppLocalizations.of(context)!.settings),
-//         actions: <Widget>[
-//           Container(
-//             child: Padding(
-//               padding: EdgeInsets.all(10.0),
-//               child: DropdownButton<Language>(
-//                 underline: SizedBox(),
-//                 icon: Icon(
-//                   Icons.language,
-//                   color: Colors.black,
-//                 ),
-//                 onChanged: (Language? language) {
-//                   if (language != null) {
-//                     MyApp.setLocale(context, Locale(language.languageCode, ''));
-//                   }
-//                 },
-//                 items: Language.languageList()
-//                     .map<DropdownMenuItem<Language>>(
-//                       (e) => DropdownMenuItem<Language>(
-//                         value: e,
-//                         child: Row(
-//                           mainAxisAlignment: MainAxisAlignment.spaceAround,
-//                           children: <Widget>[
-//                             Text(
-//                               e.flag,
-//                               style: TextStyle(fontSize: 30),
-//                             ),
-//                             Text(e.name),
-//                           ],
-//                         ),
-//                       ),
-//                     )
-//                     .toList(),
-//               ),
-//             ),
-//           ),
-//         ],
-//       ),
-//       body: Padding(
-//         padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-//         child: Column(
-//           crossAxisAlignment: CrossAxisAlignment.start,
-//           children: [],
-//         ),
-//       ),
-//     );
-//   }
-// }
 
 class Settings {
   bool isAudioEnabled;
@@ -169,6 +37,39 @@ class _SettingsScreenState extends State<SettingsScreen> {
     isPresidentEnabled: false,
     isDisablePeopleEnabled: false,
   );
+  late SharedPreferences _prefs;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSettings();
+  }
+
+  Future<void> _loadSettings() async {
+    _prefs = await SharedPreferences.getInstance();
+    setState(() {
+      settings.isAudioEnabled = _prefs.getBool('isAudioEnabled') ?? false;
+      settings.isVisualEnabled = _prefs.getBool('isVisualEnabled') ?? false;
+      settings.isNotificationsEnabled =
+          _prefs.getBool('isNotificationsEnabled') ?? false;
+      settings.isDarkModeEnabled = _prefs.getBool('isDarkModeEnabled') ?? false;
+      settings.isPresidentEnabled =
+          _prefs.getBool('isPresidentEnabled') ?? false;
+      settings.isDisablePeopleEnabled =
+          _prefs.getBool('isDisablePeopleEnabled') ?? false;
+    });
+  }
+
+  Future<void> _saveSettings() async {
+    await _prefs.setBool('isAudioEnabled', settings.isAudioEnabled);
+    await _prefs.setBool('isVisualEnabled', settings.isVisualEnabled);
+    await _prefs.setBool(
+        'isNotificationsEnabled', settings.isNotificationsEnabled);
+    await _prefs.setBool('isDarkModeEnabled', settings.isDarkModeEnabled);
+    await _prefs.setBool('isPresidentEnabled', settings.isPresidentEnabled);
+    await _prefs.setBool(
+        'isDisablePeopleEnabled', settings.isDisablePeopleEnabled);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -216,20 +117,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
         padding: const EdgeInsets.all(8.0),
         child: ListView(
           children: [
-            _buildSectionTitle('Messages from Smartphones'),
-            _buildSwitchListTile('Audio', settings.isAudioEnabled, (value) {
-              setState(() {
-                settings.isAudioEnabled = value;
-              });
-            }),
-            _buildSwitchListTile('Visual', settings.isVisualEnabled, (value) {
-              setState(() {
-                settings.isVisualEnabled = value;
-              });
-            }),
-            _buildSectionTitle('Command to Smartphone'),
+            _buildSectionTitle(
+                AppLocalizations.of(context)!.settingsstatement1),
             _buildSwitchListTile(
-              'Notifications',
+              AppLocalizations.of(context)!.settingsstatement1Option1,
+              settings.isAudioEnabled,
+              (value) {
+                setState(() {
+                  settings.isAudioEnabled = value;
+                });
+              },
+            ),
+            _buildSwitchListTile(
+              AppLocalizations.of(context)!.settingsstatement1Option2,
+              settings.isVisualEnabled,
+              (value) {
+                setState(() {
+                  settings.isVisualEnabled = value;
+                });
+              },
+            ),
+            _buildSectionTitle(
+                AppLocalizations.of(context)!.settingsstatement2),
+            _buildSwitchListTile(
+              AppLocalizations.of(context)!.settingsstatement2Option1,
               settings.isNotificationsEnabled,
               (value) {
                 setState(() {
@@ -238,7 +149,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               },
             ),
             _buildSwitchListTile(
-              'Dark Mode',
+              AppLocalizations.of(context)!.settingsstatement2Option2,
               settings.isDarkModeEnabled,
               (value) {
                 setState(() {
@@ -246,9 +157,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 });
               },
             ),
-            _buildSectionTitle('Priority'),
+            _buildSectionTitle(
+                AppLocalizations.of(context)!.settingsstatement3),
             _buildSwitchListTile(
-              'President',
+              AppLocalizations.of(context)!.settingsstatement3Option1,
               settings.isPresidentEnabled,
               (value) {
                 setState(() {
@@ -257,7 +169,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               },
             ),
             _buildSwitchListTile(
-              'Disable People',
+              AppLocalizations.of(context)!.settingsstatement3Option2,
               settings.isDisablePeopleEnabled,
               (value) {
                 setState(() {
@@ -269,9 +181,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Save settings to the database or perform any other action
-          // Here, you can navigate back or display a success message
+        onPressed: () async {
+          await _saveSettings();
+          // Perform any other necessary actions
+          // For example, display a success message or navigate back
+          Navigator.pop(context);
         },
         child: Icon(Icons.save),
       ),

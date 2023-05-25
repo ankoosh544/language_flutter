@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
-import 'package:language_transalator_example/localization/app_localization.dart';
 import 'package:language_transalator_example/screens/device_screen.dart';
+import 'package:language_transalator_example/screens/login_screen.dart';
+import 'package:language_transalator_example/utils/session_manager.dart';
 
 import '../components/drawar.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart' as gen;
@@ -23,6 +24,22 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     initBle();
     scan();
+    checkLoginStatus(); // Check the login status when the screen is initialized
+  }
+
+  void checkLoginStatus() async {
+    bool isLoggedIn = await SessionManager.isLoggedIn();
+
+    if (!isLoggedIn) {
+      _navigateToLoginScreen();
+    }
+  }
+
+  void _navigateToLoginScreen() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => LoginScreen()),
+    );
   }
 
   void initBle() {

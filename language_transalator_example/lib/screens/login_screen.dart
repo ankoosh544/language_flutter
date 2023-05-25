@@ -6,11 +6,9 @@
 // import 'package:language_transalator_example/screens/registration_screen.dart';
 // import '../components/mybutton.dart';
 // import 'package:flutter_gen/gen_l10n/app_localizations.dart' as gen;
-// import 'package:flutter/gestures.dart';
-
 
 // class LoginScreen extends StatefulWidget {
-//   const LoginScreen({super.key});
+//   const LoginScreen({Key? key}) : super(key: key);
 
 //   @override
 //   State<LoginScreen> createState() => _LoginScreenState();
@@ -19,6 +17,7 @@
 // class _LoginScreenState extends State<LoginScreen> {
 //   final emailTextController = TextEditingController();
 //   final passwordTextController = TextEditingController();
+//   PageController pageController = PageController(initialPage: 0);
 
 //   void _homePage() {
 //     Navigator.pop(context);
@@ -61,7 +60,7 @@
 //     }
 //   }
 
-//    void _registerPage() {
+//   void _registerPage() {
 //     Navigator.push(
 //       context,
 //       MaterialPageRoute(
@@ -69,7 +68,8 @@
 //       ),
 //     );
 //   }
-//   void _emergencyContactsPage(){
+
+//   void _emergencyContactsPage() {
 //     Navigator.push(
 //       context,
 //       MaterialPageRoute(
@@ -78,27 +78,41 @@
 //     );
 //   }
 
+//   @override
+//   void dispose() {
+//     pageController.dispose();
+//     super.dispose();
+//   }
 
 //   @override
 //   Widget build(BuildContext context) {
 //     return Container(
 //       decoration: const BoxDecoration(
-//           gradient: LinearGradient(
-//         begin: Alignment.topRight,
-//         end: Alignment.bottomLeft,
-//         colors: [
-//           Colors.blue,
-//           Colors.pink,
-//         ],
-//       )),
+//         gradient: LinearGradient(
+//           begin: Alignment.topRight,
+//           end: Alignment.bottomLeft,
+//           colors: [
+//             Colors.blue,
+//             Colors.pink,
+//           ],
+//         ),
+//       ),
 //       child: Scaffold(
 //         backgroundColor: Colors.transparent,
-//         body: _page(),
+//         body: PageView(
+//           controller: pageController,
+//           children: [
+//             _buildLoginScreen(),
+//             _buildEmergencyContactScreen(),
+//           ],
+//         ),
 //       ),
 //     );
 //   }
 
-//   Widget _page() {
+//   Widget _buildLoginScreen() {
+//     bool isPasswordVisible = false;
+
 //     return Padding(
 //       padding: const EdgeInsets.all(32.0),
 //       child: Center(
@@ -120,83 +134,84 @@
 //             MyTextField(
 //               controller: passwordTextController,
 //               hintText: 'Password',
-//               obscureText: true,
+//               obscureText: !isPasswordVisible,
+//               suffixIcon: IconButton(
+//                 icon: Icon(
+//                   isPasswordVisible ? Icons.visibility_off : Icons.visibility,
+//                   color: Colors.white,
+//                 ),
+//                 onPressed: () {
+//                   setState(() {
+//                     isPasswordVisible = !isPasswordVisible;
+//                   });
+//                 },
+//               ),
 //             ),
 //             const SizedBox(
 //               height: 50,
 //             ),
-            
 //             MyButton(
-//               onTap:
-//                   performLogin, // Call the login function when the button is tapped
+//               onTap: performLogin,
 //               text: gen.AppLocalizations.of(context)!.login,
 //             ),
-//              const SizedBox(
-//                   height: 15,
+//             const SizedBox(
+//               height: 15,
+//             ),
+//             Row(
+//               mainAxisAlignment: MainAxisAlignment.center,
+//               children: [
+//                 const Text(
+//                   "Not Remember Password?",
+//                   style: TextStyle(color: Colors.white),
 //                 ),
-//                 Row(
-//                   mainAxisAlignment: MainAxisAlignment.center,
-//                   children: [
-//                     Text(
-//                       "Not Remember Password?",
-//                       style: TextStyle(color: Colors.white),
-//                     ),
-//                     SizedBox(
-//                       width: 5,
-//                     ),
-//                     GestureDetector(
-//                       onTap: () {
-//                         _registerPage();
-//                       },
-//                       child: const Text(
-//                         "Register Now",
-//                         style: TextStyle(
-//                             fontWeight: FontWeight.bold, color: Colors.white),
-//                       ),
-//                     ),
-//                   ],
+//                 const SizedBox(
+//                   width: 5,
 //                 ),
-//                 SizedBox(height: 100,),
-//                 Row(
-//                   mainAxisAlignment: MainAxisAlignment.end,
-//                   children: [
-//                      GestureDetector(
-//                       onTap: () {
-//                         _emergencyContactsPage();
-//                       },
-//                       child: const Text(
-//                         "EmergencyContacts",
-//                         style: TextStyle(
-//                             color: Colors.white),
-//                       ),
-//                     ),
-//                   ],
-//                 )
+//                 GestureDetector(
+//                   onTap: () {
+//                     _registerPage();
+//                   },
+//                   child: const Text(
+//                     "Register Now",
+//                     style: TextStyle(
+//                         fontWeight: FontWeight.bold, color: Colors.white),
+//                   ),
+//                 ),
+//               ],
+//             ),
 //           ],
 //         ),
 //       ),
 //     );
 //   }
 
+//   Widget _buildEmergencyContactScreen() {
+//     return Center(
+//       child: EmergencyContactsScreen(),
+//     );
+//   }
+
 //   Widget _icon() {
 //     return Container(
 //       decoration: BoxDecoration(
-//           border: Border.all(color: Colors.white, width: 2),
-//           shape: BoxShape.circle),
+//         border: Border.all(color: Colors.white, width: 2),
+//         shape: BoxShape.circle,
+//       ),
 //       child: const Icon(Icons.person, color: Colors.white, size: 120),
 //     );
 //   }
 // }
-
 import 'package:flutter/material.dart';
-import 'package:language_transalator_example/components/my_list_tile.dart';
+
 import 'package:language_transalator_example/components/text_field.dart';
+import 'package:language_transalator_example/main.dart';
 import 'package:language_transalator_example/screens/emergencty_contacts_screen.dart';
 import 'package:language_transalator_example/screens/home_screen.dart';
 import 'package:language_transalator_example/screens/registration_screen.dart';
+import 'package:language_transalator_example/utils/session_manager.dart';
+import '../components/language.dart';
 import '../components/mybutton.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart' as gen;
-import 'package:flutter/gestures.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -206,13 +221,19 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final emailTextController = TextEditingController();
+  final usernameTextController = TextEditingController();
   final passwordTextController = TextEditingController();
   PageController pageController = PageController(initialPage: 0);
+  bool isPasswordVisible = false;
+  @override
+  void dispose() {
+    pageController.dispose();
+    super.dispose();
+  }
 
-  void _homePage() {
+  void _homePage() async {
     Navigator.pop(context);
-
+    await SessionManager.setLoggedIn(true); // Set the login status
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -223,32 +244,47 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void performLogin() {
     // Retrieve entered email and password
-    String email = emailTextController.text;
+    String username = usernameTextController.text;
     String password = passwordTextController.text;
 
     // Perform login logic here (e.g., calling an API, validating credentials)
 
-    // If login is successful, navigate to the homepage
-    if (email.isNotEmpty && password.isNotEmpty) {
-      _homePage();
+    // If login is successful, set the session data and navigate to the homepage
+    if (username.isNotEmpty && password.isNotEmpty) {
+      if (username == "public" && password == "public") {
+        SessionManager.setLoggedIn(true); // Set the login status
+
+        _homePage();
+      } else {
+        showValidationError(
+          AppLocalizations.of(context)!.error,
+          AppLocalizations.of(context)!.loginerrormsg,
+        );
+      }
     } else {
-      // Handle invalid login credentials or other error cases
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text(gen.AppLocalizations.of(context)!.error),
-          content: Text(gen.AppLocalizations.of(context)!.loginerrormsg),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: Text('OK'),
-            ),
-          ],
-        ),
+      showValidationError(
+        AppLocalizations.of(context)!.error,
+        AppLocalizations.of(context)!.loginerrormsg,
       );
     }
+  }
+
+  void showValidationError(String message, String title) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _registerPage() {
@@ -267,12 +303,6 @@ class _LoginScreenState extends State<LoginScreen> {
         builder: (context) => EmergencyContactsScreen(),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    pageController.dispose();
-    super.dispose();
   }
 
   @override
@@ -302,19 +332,51 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _buildLoginScreen() {
+    return FutureBuilder<Widget>(
+      future: _buildLoginContent(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          // Show a loading indicator while the content is being built
+          return CircularProgressIndicator();
+        } else if (snapshot.hasError) {
+          // Show an error message if an error occurred
+          return Text('Error: ${snapshot.error}');
+        } else {
+          // Show the login content once it's built
+          return Stack(
+            children: [
+              Align(
+                alignment: Alignment.topRight,
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: _globe(),
+                ),
+              ),
+              snapshot.data!,
+            ],
+          );
+        }
+      },
+    );
+  }
+
+  Future<Widget> _buildLoginContent() async {
     return Padding(
       padding: const EdgeInsets.all(32.0),
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            SizedBox(
+              height: 10,
+            ),
             _icon(),
             const SizedBox(
               height: 50,
             ),
             MyTextField(
-              controller: emailTextController,
-              hintText: 'Email',
+              controller: usernameTextController,
+              hintText: AppLocalizations.of(context)!.username,
               obscureText: false,
             ),
             const SizedBox(
@@ -322,15 +384,26 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             MyTextField(
               controller: passwordTextController,
-              hintText: 'Password',
-              obscureText: true,
+              hintText: AppLocalizations.of(context)!.password,
+              obscureText: !isPasswordVisible,
+              suffixIcon: IconButton(
+                icon: Icon(
+                  isPasswordVisible ? Icons.visibility_off : Icons.visibility,
+                  color: Colors.white,
+                ),
+                onPressed: () {
+                  setState(() {
+                    isPasswordVisible = !isPasswordVisible;
+                  });
+                },
+              ),
             ),
             const SizedBox(
               height: 50,
             ),
             MyButton(
               onTap: performLogin,
-              text: gen.AppLocalizations.of(context)!.login,
+              text: AppLocalizations.of(context)!.login,
             ),
             const SizedBox(
               height: 15,
@@ -338,8 +411,8 @@ class _LoginScreenState extends State<LoginScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text(
-                  "Not Remember Password?",
+                Text(
+                  AppLocalizations.of(context)!.nothaveaccount,
                   style: TextStyle(color: Colors.white),
                 ),
                 const SizedBox(
@@ -349,9 +422,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   onTap: () {
                     _registerPage();
                   },
-                  child: const Text(
-                    "Register Now",
-                    style: TextStyle(
+                  child: Text(
+                    AppLocalizations.of(context)!.register,
+                    style: const TextStyle(
                         fontWeight: FontWeight.bold, color: Colors.white),
                   ),
                 ),
@@ -378,5 +451,44 @@ class _LoginScreenState extends State<LoginScreen> {
       child: const Icon(Icons.person, color: Colors.white, size: 120),
     );
   }
-}
 
+  Widget _globe() {
+    return Align(
+      alignment: Alignment.topRight,
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Container(
+          child: DropdownButton<Language>(
+            underline: SizedBox(),
+            icon: Icon(
+              Icons.language,
+              color: Colors.black,
+            ),
+            onChanged: (Language? language) {
+              if (language != null) {
+                MyApp.setLocale(context, Locale(language.languageCode, ''));
+              }
+            },
+            items: Language.languageList()
+                .map<DropdownMenuItem<Language>>(
+                  (e) => DropdownMenuItem<Language>(
+                    value: e,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: <Widget>[
+                        Text(
+                          e.flag,
+                          style: TextStyle(fontSize: 30),
+                        ),
+                        Text(e.name),
+                      ],
+                    ),
+                  ),
+                )
+                .toList(),
+          ),
+        ),
+      ),
+    );
+  }
+}
