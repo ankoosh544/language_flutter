@@ -1,4 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+<uses-permission android:name="android.permission.CALL_PHONE" />
     <application
         android:label="language_transalator_example"
         android:name="${applicationName}"
@@ -30,4 +32,10 @@
             android:name="flutterEmbedding"
             android:value="2" />
     </application>
+     <queries>
+        <intent>
+            <action android:name="android.intent.action.DIAL" />
+            <data android:scheme="tel" />
+        </intent>
+    </queries>
 </manifest>
