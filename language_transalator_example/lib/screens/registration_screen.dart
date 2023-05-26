@@ -5,6 +5,7 @@ import 'package:language_transalator_example/screens/home_screen.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:language_transalator_example/screens/login_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:language_transalator_example/utils/constants.dart';
 
 class RegistrationScreen extends StatefulWidget {
   const RegistrationScreen({super.key});
@@ -46,6 +47,14 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   }
 
   Future<void> _registerUser(BuildContext context) async {
+    String userName = usernameController.text;
+    String email = emailController.text;
+    String password = passwordController.text;
+    if (userName.isEmpty && email.isEmpty && password.isEmpty) {
+      showValidationError('Validation Error', "Required Fields are missing");
+      return;
+    }
+
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setString('userName', usernameController.text);
     await prefs.setString('email', emailController.text);
@@ -53,6 +62,41 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => HomeScreen()),
+    );
+  }
+
+  void showValidationError(String title, String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Constants.PRIMARY_COLOR,
+        title: Text(
+          title,
+          style: const TextStyle(
+            color: Constants.WHITE,
+          ),
+        ),
+        content: Text(
+          message,
+          style: const TextStyle(
+            color: Constants.WHITE,
+            fontSize: 18,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: const Text(
+              'OK',
+              style: TextStyle(
+                color: Constants.WHITE,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
