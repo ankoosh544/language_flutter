@@ -1,7 +1,236 @@
-import 'dart:async';
+// import 'dart:async';
+// import 'package:flutter/material.dart';
+// import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+// import 'package:flutter_tts/flutter_tts.dart';
+// import 'package:language_transalator_example/utils/session_manager.dart';
 
+// class DeviceScreen extends StatefulWidget {
+//   DeviceScreen({Key? key, required this.device}) : super(key: key);
+
+//   final BluetoothDevice device;
+
+//   @override
+//   _DeviceScreenState createState() => _DeviceScreenState();
+// }
+
+// class _DeviceScreenState extends State<DeviceScreen> {
+//   FlutterBluePlus flutterBlue = FlutterBluePlus.instance;
+//   FlutterTts flutterTts = FlutterTts();
+
+//   String stateText = 'Connecting';
+//   String connectButtonText = 'Connect';
+//   BluetoothDeviceState deviceState = BluetoothDeviceState.disconnected;
+//   StreamSubscription<BluetoothDeviceState>? _stateListener;
+//   List<BluetoothService> bluetoothService = [];
+//   bool isConnectionAudioPlayed = false; // Added flag to track connection audio
+
+//   @override
+//   void initState() {
+//     super.initState();
+//     _stateListener = widget.device.state.listen((event) {
+//       debugPrint('event: $event');
+//       if (deviceState == event) {
+//         return;
+//       }
+
+//       setBleConnectionState(event);
+//     });
+
+//     connect();
+//   }
+
+//   @override
+//   void dispose() {
+//     _stateListener?.cancel();
+//     disconnect();
+//     super.dispose();
+//   }
+
+//   setBleConnectionState(BluetoothDeviceState event) async {
+//     setState(() {
+//       deviceState = event;
+//     });
+
+//     switch (event) {
+//       case BluetoothDeviceState.disconnected:
+//         setState(() {
+//           stateText = 'Disconnected';
+//           connectButtonText = 'Connect';
+//         });
+//         Map<String, dynamic> settings = await SessionManager.getSettings();
+//         if (settings['isAudioEnabled']) {
+//           flutterTts.speak("Bluetooth disconnected");
+//         }
+//         break;
+//       case BluetoothDeviceState.disconnecting:
+//         setState(() {
+//           stateText = 'Disconnecting';
+//         });
+//         break;
+//       case BluetoothDeviceState.connected:
+//         setState(() {
+//           stateText = 'Connected';
+//           connectButtonText = 'Disconnect';
+//         });
+//         Map<String, dynamic> settings = await SessionManager.getSettings();
+//         if (settings['isAudioEnabled'] && !isConnectionAudioPlayed) {
+//           flutterTts.speak("Bluetooth connected");
+//           isConnectionAudioPlayed = true;
+//         }
+//         break;
+//       case BluetoothDeviceState.connecting:
+//         setState(() {
+//           stateText = 'Connecting';
+//         });
+//         break;
+//     }
+//   }
+
+//   Future<bool> connect() async {
+//     setState(() {
+//       stateText = 'Connecting';
+//     });
+
+//     try {
+//       await widget.device
+//           .connect(autoConnect: false)
+//           .timeout(Duration(milliseconds: 15000), onTimeout: () {
+//         debugPrint('timeout failed');
+//         setBleConnectionState(BluetoothDeviceState.disconnected);
+//         return false;
+//       });
+
+//       setState(() {
+//         stateText = 'Connected';
+//         connectButtonText = 'Disconnect';
+//       });
+
+//       bluetoothService.clear();
+//       List<BluetoothService> bleServices =
+//           await widget.device.discoverServices();
+//       setState(() {
+//         bluetoothService = bleServices;
+//       });
+
+//       return true;
+//     } catch (e) {
+//       debugPrint('connection failed: $e');
+//       setBleConnectionState(BluetoothDeviceState.disconnected);
+//       return false;
+//     }
+//   }
+
+//   void disconnect() {
+//     setState(() {
+//       stateText = 'Disconnecting';
+//     });
+//     widget.device.disconnect();
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(
+//         title: Text(widget.device.name),
+//       ),
+//       body: Column(
+//         children: [
+//           ConnectionStatusWidget(
+//               stateText: stateText,
+//               connectButtonText: connectButtonText,
+//               onPressed: () {
+//                 if (deviceState == BluetoothDeviceState.connected) {
+//                   disconnect();
+//                 } else if (deviceState == BluetoothDeviceState.disconnected) {
+//                   connect();
+//                 }
+//               }),
+//           Expanded(
+//             child: ListView.separated(
+//               itemCount: bluetoothService.length,
+//               itemBuilder: (context, index) {
+//                 return ServiceListItem(service: bluetoothService[index]);
+//               },
+//               separatorBuilder: (BuildContext context, int index) {
+//                 return Divider();
+//               },
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+// }
+
+// class ConnectionStatusWidget extends StatelessWidget {
+//   const ConnectionStatusWidget({
+//     Key? key,
+//     required this.stateText,
+//     required this.connectButtonText,
+//     required this.onPressed,
+//   }) : super(key: key);
+
+//   final String stateText;
+//   final String connectButtonText;
+//   final VoidCallback onPressed;
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Row(
+//       mainAxisAlignment: MainAxisAlignment.spaceAround,
+//       children: [
+//         Text(stateText),
+//         OutlinedButton(
+//           onPressed: onPressed,
+//           child: Text(connectButtonText),
+//         ),
+//       ],
+//     );
+//   }
+// }
+
+// class ServiceListItem extends StatelessWidget {
+//   const ServiceListItem({
+//     Key? key,
+//     required this.service,
+//   }) : super(key: key);
+
+//   final BluetoothService service;
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return ListTile(
+//       onTap: null,
+//       title: Text(service.uuid.toString()),
+//       subtitle: Column(
+//         crossAxisAlignment: CrossAxisAlignment.start,
+//         children: [
+//           for (BluetoothCharacteristic characteristic
+//               in service.characteristics)
+//             Text(
+//                 'UUID: ${characteristic.uuid.toString()}\nProperties: ${_getPropertiesString(characteristic.properties)}'),
+//         ],
+//       ),
+//     );
+//   }
+
+//   String _getPropertiesString(CharacteristicProperties properties) {
+//     List<String> propertyList = [];
+//     if (properties.write) propertyList.add('Write');
+//     if (properties.read) propertyList.add('Read');
+//     if (properties.notify) propertyList.add('Notify');
+//     if (properties.writeWithoutResponse) propertyList.add('WriteWR');
+//     if (properties.indicate) propertyList.add('Indicate');
+
+//     return propertyList.join(', ');
+//   }
+// }
+
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:flutter_tts/flutter_tts.dart';
+import 'package:language_transalator_example/utils/session_manager.dart';
 
 class DeviceScreen extends StatefulWidget {
   DeviceScreen({Key? key, required this.device}) : super(key: key);
@@ -14,23 +243,23 @@ class DeviceScreen extends StatefulWidget {
 
 class _DeviceScreenState extends State<DeviceScreen> {
   FlutterBluePlus flutterBlue = FlutterBluePlus.instance;
+  FlutterTts flutterTts = FlutterTts();
 
   String stateText = 'Connecting';
-
-  String connectButtonText = 'Disconnect';
-
+  String connectButtonText = 'Connect';
   BluetoothDeviceState deviceState = BluetoothDeviceState.disconnected;
-
   StreamSubscription<BluetoothDeviceState>? _stateListener;
-
   List<BluetoothService> bluetoothService = [];
+  bool isConnectionAudioPlayed = false; // Added flag to track connection audio
+
+  BluetoothCharacteristic? sensorCharacteristic;
+  StreamSubscription<List<int>>? _dataSubscription;
 
   @override
-  initState() {
+  void initState() {
     super.initState();
-
     _stateListener = widget.device.state.listen((event) {
-      debugPrint('event :  $event');
+      debugPrint('event: $event');
       if (deviceState == event) {
         return;
       }
@@ -44,92 +273,117 @@ class _DeviceScreenState extends State<DeviceScreen> {
   @override
   void dispose() {
     _stateListener?.cancel();
-
+    _dataSubscription?.cancel(); // Cancel data subscription
     disconnect();
     super.dispose();
   }
 
-  @override
-  void setState(VoidCallback fn) {
-    if (mounted) {
-      super.setState(fn);
-    }
-  }
+  setBleConnectionState(BluetoothDeviceState event) async {
+    setState(() {
+      deviceState = event;
+    });
 
-  setBleConnectionState(BluetoothDeviceState event) {
     switch (event) {
       case BluetoothDeviceState.disconnected:
-        stateText = 'Disconnected';
-        connectButtonText = 'Connect';
+        setState(() {
+          stateText = 'Disconnected';
+          connectButtonText = 'Connect';
+        });
+        Map<String, dynamic> settings = await SessionManager.getSettings();
+        if (settings['isAudioEnabled']) {
+          flutterTts.speak("Bluetooth disconnected");
+        }
         break;
       case BluetoothDeviceState.disconnecting:
-        stateText = 'Disconnecting';
+        setState(() {
+          stateText = 'Disconnecting';
+        });
         break;
       case BluetoothDeviceState.connected:
-        stateText = 'Connected';
-
-        connectButtonText = 'Disconnect';
+        setState(() {
+          stateText = 'Connected';
+          connectButtonText = 'Disconnect';
+        });
+        Map<String, dynamic> settings = await SessionManager.getSettings();
+        if (settings['isAudioEnabled'] && !isConnectionAudioPlayed) {
+          flutterTts.speak("Bluetooth connected");
+          isConnectionAudioPlayed = true;
+        }
         break;
       case BluetoothDeviceState.connecting:
-        stateText = 'Connecting';
+        setState(() {
+          stateText = 'Connecting';
+        });
         break;
     }
-
-    deviceState = event;
-    setState(() {});
   }
 
   Future<bool> connect() async {
-    Future<bool>? returnValue;
     setState(() {
       stateText = 'Connecting';
     });
 
-    await widget.device
-        .connect(autoConnect: false)
-        .timeout(Duration(milliseconds: 15000), onTimeout: () {
-      returnValue = Future.value(false);
-      debugPrint('timeout failed');
+    try {
+      await widget.device
+          .connect(autoConnect: false)
+          .timeout(Duration(milliseconds: 15000), onTimeout: () {
+        debugPrint('timeout failed');
+        setBleConnectionState(BluetoothDeviceState.disconnected);
+        return false;
+      });
 
-      setBleConnectionState(BluetoothDeviceState.disconnected);
-    }).then((data) async {
+      setState(() {
+        stateText = 'Connected';
+        connectButtonText = 'Disconnect';
+      });
+
       bluetoothService.clear();
-      if (returnValue == null) {
-        debugPrint('connection successful');
-        print('start discover service');
-        List<BluetoothService> bleServices =
-            await widget.device.discoverServices();
-        setState(() {
-          bluetoothService = bleServices;
-        });
-        for (BluetoothService service in bleServices) {
-          print('============================================');
-          print('Service UUID: ${service.uuid}');
-          for (BluetoothCharacteristic c in service.characteristics) {
-            print('\tcharacteristic UUID: ${c.uuid.toString()}');
-            print('\t\twrite: ${c.properties.write}');
-            print('\t\tread: ${c.properties.read}');
-            print('\t\tnotify: ${c.properties.notify}');
-            print('\t\tisNotifying: ${c.isNotifying}');
-            print(
-                '\t\twriteWithoutResponse: ${c.properties.writeWithoutResponse}');
-            print('\t\tindicate: ${c.properties.indicate}');
+      List<BluetoothService> bleServices =
+          await widget.device.discoverServices();
+      setState(() {
+        bluetoothService = bleServices;
+      });
+
+      // Find the characteristic that holds the sensor data
+      for (BluetoothService service in bleServices) {
+        for (BluetoothCharacteristic characteristic
+            in service.characteristics) {
+          if (characteristic == true) {
+            sensorCharacteristic = characteristic;
+            await sensorCharacteristic!.setNotifyValue(true);
+            _dataSubscription = sensorCharacteristic!.value.listen((data) {
+              // Process and analyze the sensor data
+              processSensorData(data);
+            });
+            break;
           }
         }
-        returnValue = Future.value(true);
+        if (sensorCharacteristic != null) {
+          break;
+        }
       }
-    });
 
-    return returnValue ?? Future.value(false);
+      return true;
+    } catch (e) {
+      debugPrint('connection failed: $e');
+      setBleConnectionState(BluetoothDeviceState.disconnected);
+      return false;
+    }
   }
 
   void disconnect() {
-    try {
-      setState(() {
-        stateText = 'Disconnecting';
-      });
-      widget.device.disconnect();
-    } catch (e) {}
+    setState(() {
+      stateText = 'Disconnecting';
+    });
+    _dataSubscription?.cancel(); // Cancel data subscription
+    widget.device.disconnect();
+  }
+
+  void processSensorData(List<int> data) {
+    print(data);
+    // Analyze the sensor data
+    // Perform your calculations, data interpretation, or visualization
+    // based on the received data
   }
 
   @override
@@ -138,31 +392,23 @@ class _DeviceScreenState extends State<DeviceScreen> {
       appBar: AppBar(
         title: Text(widget.device.name),
       ),
-      body: Center(
-          child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
+      body: Column(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              Text('$stateText'),
-              OutlinedButton(
-                  onPressed: () {
-                    if (deviceState == BluetoothDeviceState.connected) {
-                      disconnect();
-                    } else if (deviceState ==
-                        BluetoothDeviceState.disconnected) {
-                      connect();
-                    }
-                  },
-                  child: Text(connectButtonText)),
-            ],
-          ),
+          ConnectionStatusWidget(
+              stateText: stateText,
+              connectButtonText: connectButtonText,
+              onPressed: () {
+                if (deviceState == BluetoothDeviceState.connected) {
+                  disconnect();
+                } else if (deviceState == BluetoothDeviceState.disconnected) {
+                  connect();
+                }
+              }),
           Expanded(
             child: ListView.separated(
               itemCount: bluetoothService.length,
               itemBuilder: (context, index) {
-                return listItem(bluetoothService[index]);
+                return ServiceListItem(service: bluetoothService[index]);
               },
               separatorBuilder: (BuildContext context, int index) {
                 return Divider();
@@ -170,48 +416,71 @@ class _DeviceScreenState extends State<DeviceScreen> {
             ),
           ),
         ],
-      )),
+      ),
     );
   }
+}
 
-  Widget characteristicInfo(BluetoothService r) {
-    String name = '';
-    String properties = '';
+class ConnectionStatusWidget extends StatelessWidget {
+  const ConnectionStatusWidget({
+    Key? key,
+    required this.stateText,
+    required this.connectButtonText,
+    required this.onPressed,
+  }) : super(key: key);
 
-    for (BluetoothCharacteristic c in r.characteristics) {
-      properties = '';
-      name += '\t\t${c.uuid}\n';
-      if (c.properties.write) {
-        properties += 'Write ';
-      }
-      if (c.properties.read) {
-        properties += 'Read ';
-      }
-      if (c.properties.notify) {
-        properties += 'Notify ';
-      }
-      if (c.properties.writeWithoutResponse) {
-        properties += 'WriteWR ';
-      }
-      if (c.properties.indicate) {
-        properties += 'Indicate ';
-      }
-      name += '\t\t\tProperties: $properties\n';
-    }
-    return Text(name);
+  final String stateText;
+  final String connectButtonText;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      children: [
+        Text(stateText),
+        OutlinedButton(
+          onPressed: onPressed,
+          child: Text(connectButtonText),
+        ),
+      ],
+    );
   }
+}
 
-  Widget serviceUUID(BluetoothService r) {
-    String name = '';
-    name = r.uuid.toString();
-    return Text(name);
-  }
+class ServiceListItem extends StatelessWidget {
+  const ServiceListItem({
+    Key? key,
+    required this.service,
+  }) : super(key: key);
 
-  Widget listItem(BluetoothService r) {
+  final BluetoothService service;
+
+  @override
+  Widget build(BuildContext context) {
     return ListTile(
       onTap: null,
-      title: serviceUUID(r),
-      subtitle: characteristicInfo(r),
+      title: Text(service.uuid.toString()),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (BluetoothCharacteristic characteristic
+              in service.characteristics)
+            Text(
+                'UUID: ${characteristic.uuid.toString()}\nProperties: ${_getPropertiesString(characteristic.properties)}'),
+        ],
+      ),
     );
+  }
+
+  String _getPropertiesString(CharacteristicProperties properties) {
+    List<String> propertyList = [];
+    if (properties.write) propertyList.add('Write');
+    if (properties.read) propertyList.add('Read');
+    if (properties.notify) propertyList.add('Notify');
+    if (properties.writeWithoutResponse) propertyList.add('WriteWR');
+    if (properties.indicate) propertyList.add('Indicate');
+
+    return propertyList.join(', ');
   }
 }

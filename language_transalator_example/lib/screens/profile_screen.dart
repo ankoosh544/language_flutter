@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart' as gen;
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:language_transalator_example/utils/session_manager.dart';
+
 class ProfileScreen extends StatefulWidget {
   @override
   _ProfileScreenState createState() => _ProfileScreenState();
@@ -19,10 +21,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> loadProfileData() async {
+    userName = await SessionManager.getUsername();
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
     setState(() {
-      userName = prefs.getString('userName');
       email = prefs.getString('email');
       phoneNumber = prefs.getString('phoneNumber');
     });

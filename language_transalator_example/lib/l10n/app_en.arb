@@ -30,5 +30,6 @@
   "ok" : "Ok",
   "email" : "Email",
   "username" : "UserName",
-  "password" : "Password"
+  "password" : "Password",
+  "save" : "Save"
 }

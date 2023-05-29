@@ -1,27 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../components/language.dart';
 import '../main.dart';
-
-class Settings {
-  bool isAudioEnabled;
-  bool isVisualEnabled;
-  bool isNotificationsEnabled;
-  bool isDarkModeEnabled;
-  bool isPresidentEnabled;
-  bool isDisablePeopleEnabled;
-
-  Settings({
-    required this.isAudioEnabled,
-    required this.isVisualEnabled,
-    required this.isNotificationsEnabled,
-    required this.isDarkModeEnabled,
-    required this.isPresidentEnabled,
-    required this.isDisablePeopleEnabled,
-  });
-}
+import '../utils/session_manager.dart';
 
 class SettingsScreen extends StatefulWidget {
   @override
@@ -29,15 +11,12 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  Settings settings = Settings(
-    isAudioEnabled: false,
-    isVisualEnabled: false,
-    isNotificationsEnabled: false,
-    isDarkModeEnabled: false,
-    isPresidentEnabled: false,
-    isDisablePeopleEnabled: false,
-  );
-  late SharedPreferences _prefs;
+  late bool isAudioEnabled;
+  late bool isVisualEnabled;
+  late bool isNotificationsEnabled;
+  late bool isDarkModeEnabled;
+  late bool isPresidentEnabled;
+  late bool isDisablePeopleEnabled;
 
   @override
   void initState() {
@@ -46,29 +25,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _loadSettings() async {
-    _prefs = await SharedPreferences.getInstance();
+    final settings = await SessionManager.getSettings();
     setState(() {
-      settings.isAudioEnabled = _prefs.getBool('isAudioEnabled') ?? false;
-      settings.isVisualEnabled = _prefs.getBool('isVisualEnabled') ?? false;
-      settings.isNotificationsEnabled =
-          _prefs.getBool('isNotificationsEnabled') ?? false;
-      settings.isDarkModeEnabled = _prefs.getBool('isDarkModeEnabled') ?? false;
-      settings.isPresidentEnabled =
-          _prefs.getBool('isPresidentEnabled') ?? false;
-      settings.isDisablePeopleEnabled =
-          _prefs.getBool('isDisablePeopleEnabled') ?? false;
+      isAudioEnabled = settings['isAudioEnabled'] ?? false;
+      isVisualEnabled = settings['isVisualEnabled'] ?? false;
+      isNotificationsEnabled = settings['isNotificationsEnabled'] ?? false;
+      isDarkModeEnabled = settings['isDarkModeEnabled'] ?? false;
+      isPresidentEnabled = settings['isPresidentEnabled'] ?? false;
+      isDisablePeopleEnabled = settings['isDisablePeopleEnabled'] ?? false;
     });
   }
 
   Future<void> _saveSettings() async {
-    await _prefs.setBool('isAudioEnabled', settings.isAudioEnabled);
-    await _prefs.setBool('isVisualEnabled', settings.isVisualEnabled);
-    await _prefs.setBool(
-        'isNotificationsEnabled', settings.isNotificationsEnabled);
-    await _prefs.setBool('isDarkModeEnabled', settings.isDarkModeEnabled);
-    await _prefs.setBool('isPresidentEnabled', settings.isPresidentEnabled);
-    await _prefs.setBool(
-        'isDisablePeopleEnabled', settings.isDisablePeopleEnabled);
+    await SessionManager.setSettings(
+      isAudioEnabled: isAudioEnabled,
+      isVisualEnabled: isVisualEnabled,
+      isNotificationsEnabled: isNotificationsEnabled,
+      isDarkModeEnabled: isDarkModeEnabled,
+      isPresidentEnabled: isPresidentEnabled,
+      isDisablePeopleEnabled: isDisablePeopleEnabled,
+    );
   }
 
   @override
@@ -118,62 +94,65 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: ListView(
           children: [
             _buildSectionTitle(
-                AppLocalizations.of(context)!.settingsstatement1),
+              AppLocalizations.of(context)!.settingsstatement1,
+            ),
             _buildSwitchListTile(
               AppLocalizations.of(context)!.settingsstatement1Option1,
-              settings.isAudioEnabled,
+              isAudioEnabled,
               (value) {
                 setState(() {
-                  settings.isAudioEnabled = value;
+                  isAudioEnabled = value;
                 });
               },
             ),
             _buildSwitchListTile(
               AppLocalizations.of(context)!.settingsstatement1Option2,
-              settings.isVisualEnabled,
+              isVisualEnabled,
               (value) {
                 setState(() {
-                  settings.isVisualEnabled = value;
+                  isVisualEnabled = value;
                 });
               },
             ),
             _buildSectionTitle(
-                AppLocalizations.of(context)!.settingsstatement2),
+              AppLocalizations.of(context)!.settingsstatement2,
+            ),
             _buildSwitchListTile(
               AppLocalizations.of(context)!.settingsstatement2Option1,
-              settings.isNotificationsEnabled,
+              isNotificationsEnabled,
               (value) {
                 setState(() {
-                  settings.isNotificationsEnabled = value;
+                  isNotificationsEnabled = value;
                 });
               },
             ),
             _buildSwitchListTile(
               AppLocalizations.of(context)!.settingsstatement2Option2,
-              settings.isDarkModeEnabled,
+              isDarkModeEnabled,
               (value) {
                 setState(() {
-                  settings.isDarkModeEnabled = value;
+                  isDarkModeEnabled = value;
                 });
               },
             ),
             _buildSectionTitle(
-                AppLocalizations.of(context)!.settingsstatement3),
+              AppLocalizations.of(context)!.settingsstatement3,
+            ),
             _buildSwitchListTile(
               AppLocalizations.of(context)!.settingsstatement3Option1,
-              settings.isPresidentEnabled,
+              isPresidentEnabled,
               (value) {
                 setState(() {
-                  settings.isPresidentEnabled = value;
+                  isPresidentEnabled = value;
                 });
               },
             ),
             _buildSwitchListTile(
               AppLocalizations.of(context)!.settingsstatement3Option2,
-              settings.isDisablePeopleEnabled,
+              isDisablePeopleEnabled,
               (value) {
                 setState(() {
-                  settings.isDisablePeopleEnabled = value;
+                  isDisablePeopleEnabled = value;
                 });
               },
             ),
@@ -211,7 +190,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildSwitchListTile(
-      String title, bool value, Function(bool) onChanged) {
+    String title,
+    bool value,
+    Function(bool) onChanged,
+  ) {
     return ListTile(
       title: Text(title),
       trailing: Switch(

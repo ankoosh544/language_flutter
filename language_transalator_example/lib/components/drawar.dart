@@ -8,6 +8,7 @@ import 'package:language_transalator_example/screens/login_screen.dart';
 import 'package:language_transalator_example/screens/profile_screen.dart';
 import 'package:language_transalator_example/screens/settings_screen.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:language_transalator_example/utils/session_manager.dart';
 
 class MyDrawer extends StatelessWidget {
   const MyDrawer({
@@ -53,9 +54,11 @@ class MyDrawer extends StatelessWidget {
       );
     }
 
-    void gotoLoginPage() {
-      Navigator.pop(context);
-      Navigator.push(
+    void logout() async {
+      // await SessionManager.clearSession();
+
+      // Navigate to the login or home screen after logout
+      Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => LoginScreen()),
       );
@@ -105,7 +108,7 @@ class MyDrawer extends StatelessWidget {
             icon: Icons.logout,
             text: AppLocalizations.of(context)!.logout,
             onTap: () {
-              gotoLoginPage();
+              logout();
             },
           ),
         ],
