@@ -31,5 +31,7 @@
   "email" : "Email",
   "username" : "UserName",
   "password" : "Password",
-  "save" : "Save"
+  "save" : "Save",
+  "bledisc": "Bluetooth disconnected",
+  "blec" : "Bluetooth Connected"
 }

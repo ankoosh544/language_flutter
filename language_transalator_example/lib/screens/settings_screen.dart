@@ -11,12 +11,12 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  late bool isAudioEnabled;
-  late bool isVisualEnabled;
-  late bool isNotificationsEnabled;
-  late bool isDarkModeEnabled;
-  late bool isPresidentEnabled;
-  late bool isDisablePeopleEnabled;
+  late bool isAudioEnabled = false;
+  late bool isVisualEnabled = false;
+  late bool isNotificationsEnabled = false;
+  late bool isDarkModeEnabled = false;
+  late bool isPresidentEnabled = false;
+  late bool isDisablePeopleEnabled = false;
 
   @override
   void initState() {
@@ -159,15 +159,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          await _saveSettings();
-          // Perform any other necessary actions
-          // For example, display a success message or navigate back
-          Navigator.pop(context);
-        },
-        child: Icon(Icons.save),
-      ),
     );
   }
 
@@ -189,17 +180,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildSwitchListTile(
-    String title,
-    bool value,
-    Function(bool) onChanged,
-  ) {
-    return ListTile(
-      title: Text(title),
-      trailing: Switch(
-        value: value,
-        onChanged: onChanged,
-      ),
-    );
-  }
+ Widget _buildSwitchListTile(
+  String title,
+  bool value,
+  Function(bool) onChanged,
+) {
+  return ListTile(
+    title: Text(title),
+    trailing: Switch(
+      value: value,
+      onChanged: (newValue) {
+        onChanged(newValue);
+        _saveSettings(); // Save settings immediately when switch is toggled
+      },
+    ),
+  );
+}
+
 }

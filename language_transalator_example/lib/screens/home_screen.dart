@@ -1,143 +1,3 @@
-// import 'package:flutter/material.dart';
-// import 'package:flutter_blue_plus/flutter_blue_plus.dart';
-// import 'package:language_transalator_example/screens/device_screen.dart';
-// import 'package:language_transalator_example/screens/login_screen.dart';
-// import 'package:language_transalator_example/utils/session_manager.dart';
-
-// import '../components/drawar.dart';
-// import 'package:flutter_gen/gen_l10n/app_localizations.dart' as gen;
-
-// class HomeScreen extends StatefulWidget {
-//   const HomeScreen({super.key});
-
-//   @override
-//   State<HomeScreen> createState() => _HomeScreenState();
-// }
-
-// class _HomeScreenState extends State<HomeScreen> {
-//   FlutterBluePlus flutterBlue = FlutterBluePlus.instance;
-//   List<ScanResult> scanResultList = [];
-//   bool _isScanning = false;
-
-//   @override
-//   initState() {
-//     super.initState();
-//     initBle();
-//     scan();
-//     checkLoginStatus(); // Check the login status when the screen is initialized
-//   }
-
-//   void checkLoginStatus() async {
-//     bool isLoggedIn = await SessionManager.isLoggedIn();
-
-//     if (!isLoggedIn) {
-//       _navigateToLoginScreen();
-//     }
-//   }
-
-//   void _navigateToLoginScreen() {
-//     Navigator.pushReplacement(
-//       context,
-//       MaterialPageRoute(builder: (context) => LoginScreen()),
-//     );
-//   }
-
-//   void initBle() {
-//     flutterBlue.isScanning.listen((isScanning) {
-//       _isScanning = isScanning;
-//       setState(() {});
-//     });
-//   }
-
-//   scan() async {
-//     if (!_isScanning) {
-//       scanResultList.clear();
-//       flutterBlue.startScan(timeout: Duration(seconds: 4));
-
-//       flutterBlue.scanResults.listen((results) {
-//         scanResultList = results;
-//         setState(() {});
-//       });
-//     } else {
-//       flutterBlue.stopScan();
-//     }
-//   }
-
-//   Widget deviceSignal(ScanResult r) {
-//     return Text(r.rssi.toString());
-//   }
-
-//   Widget deviceMacAddress(ScanResult r) {
-//     return Text(r.device.id.id);
-//   }
-
-//   Widget deviceName(ScanResult r) {
-//     String name = '';
-
-//     if (r.device.name.isNotEmpty) {
-//       name = r.device.name;
-//     } else if (r.advertisementData.localName.isNotEmpty) {
-//       name = r.advertisementData.localName;
-//     } else {
-//       name = 'N/A';
-//     }
-//     return Text(name);
-//   }
-
-//   Widget leading(ScanResult r) {
-//     return const CircleAvatar(
-//       child: Icon(
-//         Icons.bluetooth,
-//         color: Colors.white,
-//       ),
-//       backgroundColor: Colors.cyan,
-//     );
-//   }
-
-//   void onTap(ScanResult r) {
-//     print('${r.device.name}');
-//     Navigator.push(
-//       context,
-//       MaterialPageRoute(builder: (context) => DeviceScreen(device: r.device)),
-//     );
-//   }
-
-//   Widget listItem(ScanResult r) {
-//     return ListTile(
-//       onTap: () => onTap(r),
-//       leading: leading(r),
-//       title: deviceName(r),
-//       subtitle: deviceMacAddress(r),
-//       trailing: deviceSignal(r),
-//     );
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(
-//         title: Text(gen.AppLocalizations.of(context)!.home),
-//       ),
-//       drawer: MyDrawer(),
-//       body: Center(
-//         child: ListView.separated(
-//           itemCount: scanResultList.length,
-//           itemBuilder: (context, index) {
-//             return listItem(scanResultList[index]);
-//           },
-//           separatorBuilder: (BuildContext context, int index) {
-//             return Divider();
-//           },
-//         ),
-//       ),
-//       floatingActionButton: FloatingActionButton(
-//         onPressed: scan,
-//         child: Icon(_isScanning ? Icons.stop : Icons.search),
-//       ),
-//     );
-//   }
-// }
-
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:language_transalator_example/screens/device_screen.dart';
@@ -147,6 +7,8 @@ import 'package:collection/collection.dart';
 
 import '../components/drawar.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart' as gen;
+import 'dart:async';
+
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key});
@@ -159,13 +21,20 @@ class _HomeScreenState extends State<HomeScreen> {
   FlutterBluePlus flutterBlue = FlutterBluePlus.instance;
   List<ScanResult> scanResultList = [];
   bool _isScanning = false;
+  StreamSubscription<List<ScanResult>>? scanResultsSubscription;
 
   @override
   void initState() {
     super.initState();
     initBle();
     scan();
-    checkLoginStatus(); // Check the login status when the screen is initialized
+    checkLoginStatus();
+  }
+
+  @override
+  void dispose() {
+    scanResultsSubscription?.cancel(); // Cancel the scan results subscription
+    super.dispose();
   }
 
   void checkLoginStatus() async {
@@ -183,21 +52,39 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void initBle() {
-    flutterBlue.isScanning.listen((isScanning) {
-      _isScanning = isScanning;
-      setState(() {});
-    });
-  }
+ void initBle() {
+  // Create a reference to the subscription
+  StreamSubscription<bool> isScanningSubscription;
 
-  scan() async {
+  // Listen to the isScanning stream and update the _isScanning variable
+  isScanningSubscription = flutterBlue.isScanning.listen((isScanning) {
+    _isScanning = isScanning;
+    if (mounted) {
+      setState(() {});
+    }
+  });
+
+  // Cancel the subscription during dispose()
+  // to break the reference to the State object
+  // and avoid memory leaks
+  WidgetsBinding.instance?.addPostFrameCallback((_) {
+    if (mounted) {
+      setState(() {});
+    }
+    isScanningSubscription.cancel();
+  });
+}
+
+  Future<void> scan() async {
     if (!_isScanning) {
       scanResultList.clear();
       flutterBlue.startScan(timeout: Duration(seconds: 4));
 
-      flutterBlue.scanResults.listen((results) async {
+      scanResultsSubscription = flutterBlue.scanResults.listen((results) async {
         scanResultList = results;
-        setState(() {});
+        if (mounted) {
+          setState(() {});
+        }
 
         // Check if previously connected device is available
         String? connectedDeviceId = await SessionManager.getConnectedDeviceId();

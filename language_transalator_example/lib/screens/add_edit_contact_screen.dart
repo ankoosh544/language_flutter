@@ -1,87 +1,122 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:language_transalator_example/components/emergency_contact.dart';
+import 'package:language_transalator_example/components/storage_service.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class AddEditContactScreen extends StatefulWidget {
-  final String title;
-  final String? initialName;
-  final String? initialPhoneNumber;
-  final void Function(String name, String phoneNumber) onSave;
+  final EmergencyContact? contact;
 
-  AddEditContactScreen({
-    required this.title,
-    required this.onSave,
-    this.initialName,
-    this.initialPhoneNumber,
-  });
+  AddEditContactScreen({this.contact});
 
   @override
   _AddEditContactScreenState createState() => _AddEditContactScreenState();
 }
 
 class _AddEditContactScreenState extends State<AddEditContactScreen> {
-  final _formKey = GlobalKey<FormState>();
-  late TextEditingController _nameController;
-  late TextEditingController _phoneNumberController;
+  final StorageService storageService = StorageService();
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController phoneNumberController = TextEditingController();
+
+  bool isEditing = false;
 
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.initialName);
-    _phoneNumberController =
-        TextEditingController(text: widget.initialPhoneNumber);
+    if (widget.contact != null) {
+      nameController.text = widget.contact!.name;
+      phoneNumberController.text = widget.contact!.phoneNumber;
+      isEditing = true;
+    }
   }
 
   @override
   void dispose() {
-    _nameController.dispose();
-    _phoneNumberController.dispose();
+    nameController.dispose();
+    phoneNumberController.dispose();
     super.dispose();
   }
 
-  void _saveContact() {
-    if (_formKey.currentState!.validate()) {
-      String name = _nameController.text;
-      String phoneNumber = _phoneNumberController.text;
-      widget.onSave(name, phoneNumber);
+  bool validateName(String value) {
+    if (value.isEmpty) {
+      return false;
+    }
+    // Add additional validation rules if needed
+    return true;
+  }
+
+  bool validatePhoneNumber(String value) {
+    if (value.isEmpty) {
+      return false;
+    }
+    // Add additional validation rules if needed
+    return true;
+  }
+
+  void saveContact() {
+    String name = nameController.text;
+    String phoneNumber = phoneNumberController.text;
+
+    if (validateName(name) && validatePhoneNumber(phoneNumber)) {
+      EmergencyContact contact =
+          EmergencyContact(name: name, phoneNumber: phoneNumber);
+
+      if (isEditing) {
+        contact.id = widget.contact!.id;
+        storageService.updateEmergencyContact(contact);
+      } else {
+        storageService.addEmergencyContact(contact);
+      }
+
+      Navigator.pop(context);
+    } else {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('Validation Error'),
+          content: Text('Please enter valid name and phone number.'),
+          actions: [
+            TextButton(
+              child: Text('OK'),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+          ],
+        ),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(widget.title)),
+      appBar: AppBar(
+        title: Text(isEditing ? 'Edit Contact' : 'Add Contact'),
+      ),
       body: Padding(
         padding: EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              TextFormField(
-                controller: _nameController,
-                decoration: InputDecoration(labelText: 'Name'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a name';
-                  }
-                  return null;
-                },
+        child: Column(
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: InputDecoration(
+                labelText: 'Name',
               ),
-              TextFormField(
-                controller: _phoneNumberController,
-                decoration: InputDecoration(labelText: 'Phone Number'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a phone number';
-                  }
-                  return null;
-                },
+            ),
+            SizedBox(height: 16.0),
+            TextField(
+              controller: phoneNumberController,
+              decoration: InputDecoration(
+                labelText: 'Phone Number',
               ),
-              SizedBox(height: 16.0),
-              ElevatedButton(
-                onPressed: _saveContact,
-                child: Text('Save'),
-              ),
-            ],
-          ),
+              keyboardType: TextInputType.phone,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            ),
+            SizedBox(height: 16.0),
+            ElevatedButton(
+              onPressed: saveContact,
+              child: Text(isEditing ? 'Save Changes' : 'Add Contact'),
+            ),
+          ],
         ),
       ),
     );
