@@ -2,9 +2,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_tts/flutter_tts.dart';
+import 'package:language_transalator_example/components/service_list_item.dart';
 import 'package:language_transalator_example/utils/session_manager.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import '../components/connection_status_widget.dart';
 
 class DeviceScreen extends StatefulWidget {
   DeviceScreen({Key? key, required this.device}) : super(key: key);
@@ -26,7 +28,8 @@ class _DeviceScreenState extends State<DeviceScreen> {
   List<BluetoothService> bluetoothService = [];
   bool isAudioEnabled = false;
   bool isVisualEnabled = false;
-  bool isConnectionAudioPlayed = false; // Added flag to track connection audio
+
+  final String deviceType = "ESP32";
 
   BluetoothCharacteristic? sensorCharacteristic;
   StreamSubscription<List<int>>? _dataSubscription;
@@ -42,8 +45,6 @@ class _DeviceScreenState extends State<DeviceScreen> {
 
       setBleConnectionState(event);
     });
-
-    connect();
   }
 
   @override
@@ -55,59 +56,81 @@ class _DeviceScreenState extends State<DeviceScreen> {
   }
 
   setBleConnectionState(BluetoothDeviceState event) async {
-    if(mounted){
-setState(() {
-    deviceState = event;
-  });
+    if (mounted) {
+      setState(() {
+        deviceState = event;
+      });
     }
-  
 
-  switch (event) {
-    case BluetoothDeviceState.disconnected:
-      setState(() {
-        stateText = 'Disconnected';
-        connectButtonText = 'Connect';
-      });
-      Map<String, dynamic> settings = await SessionManager.getSettings();
-      if (settings['isAudioEnabled']) {
-        flutterTts.speak(AppLocalizations.of(context)!.bledisc);
-      }
-      if (settings['isVisualEnabled']) {
-        showSuccessWindowBox(AppLocalizations.of(context)!.bledisc);
-      }
-      break;
-    case BluetoothDeviceState.disconnecting:
-      setState(() {
-        stateText = 'Disconnecting';
-      });
-      break;
-    case BluetoothDeviceState.connected:
-      setState(() {
-        stateText = 'Connected';
-        connectButtonText = 'Disconnect';
-      });
-      Map<String, dynamic> settings = await SessionManager.getSettings();
-      if (settings['isAudioEnabled'] && !isConnectionAudioPlayed) {
-        flutterTts.speak(AppLocalizations.of(context)!.blec);
-        isConnectionAudioPlayed = true;
-      }
-      if (settings['isVisualEnabled']) {
-        showSuccessWindowBox(AppLocalizations.of(context)!.blec);
-      }
-      break;
-    case BluetoothDeviceState.connecting:
-      setState(() {
-        stateText = 'Connecting';
-      });
-      break;
+    switch (event) {
+      case BluetoothDeviceState.disconnected:
+        setState(() {
+          stateText = 'Disconnected';
+          isAudioEnabled = false;
+          isVisualEnabled = false;
+          connectButtonText = 'Connect';
+        });
+        Map<String, dynamic> settings = await SessionManager.getSettings();
+        if (settings['isAudioEnabled'] && !isAudioEnabled) {
+          flutterTts.speak(AppLocalizations.of(context)!.bledisc);
+        }
+        if (settings['isVisualEnabled'] && !isVisualEnabled) {
+          showSuccessWindowBox(AppLocalizations.of(context)!.bledisc);
+        }
+        break;
+      case BluetoothDeviceState.disconnecting:
+        setState(() {
+          stateText = 'Disconnecting';
+        });
+        break;
+      case BluetoothDeviceState.connected:
+        setState(() {
+          stateText = 'Connected';
+
+          connectButtonText = 'Disconnect';
+        });
+        // Store the connected device ID in SessionManager
+        String deviceId = widget.device.id.id;
+        SessionManager.setConnectedDeviceId(deviceId);
+
+        Map<String, dynamic> settings = await SessionManager.getSettings();
+        debugPrint("==============audio=================================");
+        debugPrint(isAudioEnabled.toString());
+        debugPrint("===================visual============================");
+        debugPrint(isVisualEnabled.toString());
+        if (settings['isAudioEnabled'] && !isAudioEnabled) {
+          flutterTts.speak(AppLocalizations.of(context)!.blec);
+        }
+        if (settings['isVisualEnabled'] && !isVisualEnabled) {
+          showSuccessWindowBox(AppLocalizations.of(context)!.blec);
+        }
+        setState(() {
+          isAudioEnabled = true;
+          isVisualEnabled = true;
+        });
+        break;
+      case BluetoothDeviceState.connecting:
+        setState(() {
+          stateText = 'Connecting';
+        });
+        break;
+    }
   }
-}
-
 
   Future<bool> connect() async {
     setState(() {
       stateText = 'Connecting';
     });
+
+    // Check if the device is already connected to the same device
+    if (deviceState == BluetoothDeviceState.connected &&
+        widget.device.id.id == SessionManager.getConnectedDeviceId()) {
+      setState(() {
+        stateText = 'Connected';
+        connectButtonText = 'Disconnect';
+      });
+      return true;
+    }
 
     try {
       await widget.device
@@ -118,10 +141,9 @@ setState(() {
         return false;
       });
 
-      setState(() {
-        stateText = 'Connected';
-        connectButtonText = 'Disconnect';
-      });
+      // Store the connected device ID in SessionManager
+      String deviceId = widget.device.id.id;
+      SessionManager.setConnectedDeviceId(deviceId);
 
       bluetoothService.clear();
       List<BluetoothService> bleServices =
@@ -134,7 +156,7 @@ setState(() {
       for (BluetoothService service in bleServices) {
         for (BluetoothCharacteristic characteristic
             in service.characteristics) {
-          if (characteristic == true) {
+          if (characteristic.properties.notify) {
             sensorCharacteristic = characteristic;
             await sensorCharacteristic!.setNotifyValue(true);
             _dataSubscription = sensorCharacteristic!.value.listen((data) {
@@ -148,6 +170,11 @@ setState(() {
           break;
         }
       }
+
+      setState(() {
+        stateText = 'Connected';
+        connectButtonText = 'Disconnect';
+      });
 
       return true;
     } catch (e) {
@@ -172,17 +199,16 @@ setState(() {
     // based on the received data
   }
 
-//success windowBox
+  // Success windowBox
   void showSuccessWindowBox(String message) {
-  Fluttertoast.showToast(
-    msg: message,
-    toastLength: Toast.LENGTH_LONG,
-    gravity: ToastGravity.CENTER,
-    backgroundColor: Colors.green,
-    textColor: Colors.white,
-  );
-}
-
+    Fluttertoast.showToast(
+      msg: message,
+      toastLength: Toast.LENGTH_LONG,
+      gravity: ToastGravity.CENTER,
+      backgroundColor: Colors.green,
+      textColor: Colors.white,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -193,20 +219,24 @@ setState(() {
       body: Column(
         children: [
           ConnectionStatusWidget(
-              stateText: stateText,
-              connectButtonText: connectButtonText,
-              onPressed: () {
-                if (deviceState == BluetoothDeviceState.connected) {
-                  disconnect();
-                } else if (deviceState == BluetoothDeviceState.disconnected) {
-                  connect();
-                }
-              }),
+            stateText: stateText,
+            connectButtonText: connectButtonText,
+            onPressed: () {
+              if (deviceState == BluetoothDeviceState.connected) {
+                disconnect();
+              } else if (deviceState == BluetoothDeviceState.disconnected) {
+                connect();
+              }
+            },
+          ),
           Expanded(
             child: ListView.separated(
               itemCount: bluetoothService.length,
               itemBuilder: (context, index) {
-                return ServiceListItem(service: bluetoothService[index]);
+                return ServiceListItem(
+                  service: bluetoothService[index],
+                  device: widget.device, // Pass the device object here
+                );
               },
               separatorBuilder: (BuildContext context, int index) {
                 return Divider();
@@ -216,69 +246,5 @@ setState(() {
         ],
       ),
     );
-  }
-}
-
-class ConnectionStatusWidget extends StatelessWidget {
-  const ConnectionStatusWidget({
-    Key? key,
-    required this.stateText,
-    required this.connectButtonText,
-    required this.onPressed,
-  }) : super(key: key);
-
-  final String stateText;
-  final String connectButtonText;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
-      children: [
-        Text(stateText),
-        OutlinedButton(
-          onPressed: onPressed,
-          child: Text(connectButtonText),
-        ),
-      ],
-    );
-  }
-}
-
-class ServiceListItem extends StatelessWidget {
-  const ServiceListItem({
-    Key? key,
-    required this.service,
-  }) : super(key: key);
-
-  final BluetoothService service;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      onTap: null,
-      title: Text(service.uuid.toString()),
-      subtitle: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          for (BluetoothCharacteristic characteristic
-              in service.characteristics)
-            Text(
-                'UUID: ${characteristic.uuid.toString()}\nProperties: ${_getPropertiesString(characteristic.properties)}'),
-        ],
-      ),
-    );
-  }
-
-  String _getPropertiesString(CharacteristicProperties properties) {
-    List<String> propertyList = [];
-    if (properties.write) propertyList.add('Write');
-    if (properties.read) propertyList.add('Read');
-    if (properties.notify) propertyList.add('Notify');
-    if (properties.writeWithoutResponse) propertyList.add('WriteWR');
-    if (properties.indicate) propertyList.add('Indicate');
-
-    return propertyList.join(', ');
   }
 }

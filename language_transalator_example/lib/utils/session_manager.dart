@@ -2,7 +2,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
 class SessionManager {
-  static final String _isLoggedInKey = 'isLoggedIn';
+  static final String isLoggedInKey = 'isLoggedIn';
   static final String _rememberMeKey = 'rememberMe';
   static final String _usernameKey = 'username';
   static final String _passwordKey = 'password';
@@ -14,6 +14,18 @@ class SessionManager {
   static final String _isPresidentEnabledKey = 'isPresidentEnabled';
   static final String _isDisablePeopleEnabledKey = 'isDisablePeopleEnabled';
   static const String _connectedDeviceKey = 'connectedDevice';
+  static final String isConnectionAudioPlayedKey = 'isConnectionAudioPlayed';
+
+  static Future<bool> getConnectionAudioPlayed() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(isConnectionAudioPlayedKey) ?? false;
+  }
+
+  static Future<void> setConnectionAudioPlayed(
+      bool isConnectionAudioPlayed) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(isConnectionAudioPlayedKey, isConnectionAudioPlayed);
+  }
 
   static Future<String?> getConnectedDeviceId() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -32,12 +44,12 @@ class SessionManager {
 
   static Future<void> setLoggedIn(bool isLoggedIn) async {
     final preferences = await SharedPreferences.getInstance();
-    await preferences.setBool(_isLoggedInKey, isLoggedIn);
+    await preferences.setBool(isLoggedInKey, isLoggedIn);
   }
 
   static Future<bool> isLoggedIn() async {
     final preferences = await SharedPreferences.getInstance();
-    return preferences.getBool(_isLoggedInKey) ?? false;
+    return preferences.getBool(isLoggedInKey) ?? false;
   }
 
   static Future<void> setRememberMe(bool rememberMe) async {
@@ -114,4 +126,10 @@ class SessionManager {
   //   SharedPreferences prefs = await SharedPreferences.getInstance();
   //   await prefs.clear();
   // }
+  static Future<void> clearSpecificValues(List<String> keys) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    for (String key in keys) {
+      await prefs.remove(key);
+    }
+  }
 }

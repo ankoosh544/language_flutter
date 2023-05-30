@@ -5,7 +5,6 @@ import 'package:language_transalator_example/screens/device_screen.dart';
 import 'package:language_transalator_example/screens/login_screen.dart';
 import 'package:language_transalator_example/utils/session_manager.dart';
 import 'package:collection/collection.dart';
-
 import 'package:flutter_gen/gen_l10n/app_localizations.dart' as gen;
 import 'dart:async';
 
@@ -23,6 +22,7 @@ class _HomeScreenState extends State<HomeScreen> {
   StreamSubscription<List<ScanResult>>? scanResultsSubscription;
 
   final String DeviceType = "ESP32";
+
   @override
   void initState() {
     super.initState();
@@ -86,6 +86,7 @@ class _HomeScreenState extends State<HomeScreen> {
           }
         }
 
+        scanResultList = results.take(3).toList();
         if (mounted) {
           setState(() {});
         }
@@ -96,56 +97,25 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _connectToDevice(BluetoothDevice device) async {
-    if (device.state != BluetoothDeviceState.connected) {
-      await device.connect(autoConnect: true);
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => DeviceScreen(device: device),
-        ),
-      );
-    } else {
-      // Device is already connected, handle accordingly (e.g., show a message)
-      print('Device is already connected.');
-    }
+    await device.connect(autoConnect: true);
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DeviceScreen(device: device),
+      ),
+    );
   }
 
   Future<void> connectToBondedDevice() async {
     String? connectedDeviceId = await SessionManager.getConnectedDeviceId();
     if (connectedDeviceId != null) {
-      print(connectedDeviceId);
-      print("Connected Device ID====================================");
       ScanResult? connectedDevice = scanResultList.firstWhereOrNull(
         (result) => result.device.id.id == connectedDeviceId,
       );
       if (connectedDevice != null) {
-        if (connectedDevice.device.state == BluetoothDeviceState.connected) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) =>
-                  DeviceScreen(device: connectedDevice.device),
-            ),
-          );
-        } else {
-          await connectToDevice(connectedDevice.device);
-        }
+        await flutterBlue.stopScan();
+        await _connectToDevice(connectedDevice.device);
       }
-    }
-  }
-
-  Future<void> connectToDevice(BluetoothDevice device) async {
-    try {
-      await device.connect(autoConnect: true);
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => DeviceScreen(device: device),
-        ),
-      );
-    } catch (e) {
-      print('Error connecting to device: $e');
-      // Handle the connection error as needed
     }
   }
 

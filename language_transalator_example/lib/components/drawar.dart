@@ -54,8 +54,13 @@ class MyDrawer extends StatelessWidget {
       );
     }
 
-    void logout() async {
-      // await SessionManager.clearSession();
+    Future<void> logout() async {
+      List<String> keysToClear = [
+        SessionManager.isLoggedInKey,
+        SessionManager.isConnectionAudioPlayedKey,
+        // Add other keys for values you want to clear
+      ];
+      await SessionManager.clearSpecificValues(keysToClear);
 
       // Navigate to the login or home screen after logout
       Navigator.pushReplacement(

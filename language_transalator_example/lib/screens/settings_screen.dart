@@ -180,21 +180,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
- Widget _buildSwitchListTile(
-  String title,
-  bool value,
-  Function(bool) onChanged,
-) {
-  return ListTile(
-    title: Text(title),
-    trailing: Switch(
-      value: value,
-      onChanged: (newValue) {
-        onChanged(newValue);
-        _saveSettings(); // Save settings immediately when switch is toggled
-      },
-    ),
-  );
-}
-
+  Widget _buildSwitchListTile(
+    String title,
+    bool value,
+    Function(bool) onChanged,
+  ) {
+    return ListTile(
+      title: Text(title),
+      trailing: Switch(
+        value: value,
+        onChanged: (newValue) {
+          onChanged(newValue);
+          _saveSettings(); // Save settings immediately when switch is toggled
+        },
+      ),
+    );
+  }
 }

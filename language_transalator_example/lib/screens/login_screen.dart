@@ -101,7 +101,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     // If login is successful, set the session data and navigate to the homepage
     if (username.isNotEmpty && password.isNotEmpty) {
-      if (username == "public" && password == "public") {
+      if (username == "shek" && password == "shek") {
         SessionManager.setLoggedIn(true); // Set the login status
 
         saveLoginData(); // Save the login data if "Remember Me" is checked
