@@ -1,7 +1,12 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools"
+package="com.example.language_transalator_example">
+
+<uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
 
 <uses-permission android:name="android.permission.CALL_PHONE" />
     <application
+        tools:replace="android:label"
         android:label="language_transalator_example"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
@@ -31,6 +36,11 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+
+            <meta-data
+  android:name="com.dexterous.flutterlocalnotifications.default_notification_channel_id"
+  android:value="@string/default_notification_channel_id" />
+
     </application>
      <queries>
         <intent>

@@ -70,7 +70,7 @@ class MyDrawer extends StatelessWidget {
     }
 
     return Drawer(
-      backgroundColor: Color.fromARGB(255, 61, 30, 47),
+      backgroundColor: const Color.fromARGB(255, 8, 50, 85),
       child: ListView(
         padding: EdgeInsets.zero,
         children: <Widget>[

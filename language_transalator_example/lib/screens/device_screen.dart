@@ -6,6 +6,7 @@ import 'package:language_transalator_example/components/service_list_item.dart';
 import 'package:language_transalator_example/utils/session_manager.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../components/connection_status_widget.dart';
 
 class DeviceScreen extends StatefulWidget {
@@ -33,6 +34,8 @@ class _DeviceScreenState extends State<DeviceScreen> {
 
   BluetoothCharacteristic? sensorCharacteristic;
   StreamSubscription<List<int>>? _dataSubscription;
+
+  int? _floorNumber; // New variable for floor number
 
   @override
   void initState() {
@@ -229,22 +232,92 @@ class _DeviceScreenState extends State<DeviceScreen> {
               }
             },
           ),
-          Expanded(
-            child: ListView.separated(
-              itemCount: bluetoothService.length,
-              itemBuilder: (context, index) {
-                return ServiceListItem(
-                  service: bluetoothService[index],
-                  device: widget.device, // Pass the device object here
-                );
-              },
-              separatorBuilder: (BuildContext context, int index) {
-                return Divider();
-              },
-            ),
-          ),
+          SizedBox(height: 16),
+          if (stateText == "Connected")
+            {
+              WelcomeWidget(
+                onChanged: (value) {
+                  setState(() {
+                    _floorNumber = value;
+                  });
+                },
+                onPressed: () {
+                  if (_floorNumber != null) {
+                    // Do something with the selected floor number here
+                  }
+                },
+              ),
+            },
         ],
       ),
+    );
+  }
+}
+
+class WelcomeWidget extends StatefulWidget {
+  final Function(int)? onChanged;
+  final Function()? onPressed;
+
+  const WelcomeWidget({Key? key, this.onChanged, this.onPressed})
+      : super(key: key);
+
+  @override
+  _WelcomeWidgetState createState() => _WelcomeWidgetState();
+}
+
+class _WelcomeWidgetState extends State<WelcomeWidget> {
+  String? userName;
+  TextEditingController _controller = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+
+    loadProfileData();
+  }
+
+  Future<void> loadProfileData() async {
+    userName = await SessionManager.getUsername();
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    setState(() {
+      userName = prefs.getString('username');
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    print(userName);
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          'Welcome  ' + userName.toString(),
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        SizedBox(height: 16),
+        TextField(
+          controller: _controller,
+          keyboardType: TextInputType.number,
+          onChanged: (value) {
+            if (widget.onChanged != null) {
+              widget.onChanged!(int.tryParse(value) ?? -1);
+            }
+          },
+          decoration: InputDecoration(
+            border: OutlineInputBorder(),
+            labelText: 'Enter Floor Number',
+          ),
+        ),
+        SizedBox(height: 16),
+        ElevatedButton(
+          onPressed: widget.onPressed,
+          child: Text('Confirm'),
+        ),
+      ],
     );
   }
 }

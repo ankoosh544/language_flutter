@@ -5,6 +5,7 @@ import 'package:language_transalator_example/screens/device_screen.dart';
 import 'package:language_transalator_example/screens/login_screen.dart';
 import 'package:language_transalator_example/utils/session_manager.dart';
 import 'package:collection/collection.dart';
+
 import 'package:flutter_gen/gen_l10n/app_localizations.dart' as gen;
 import 'dart:async';
 
@@ -21,20 +22,17 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isScanning = false;
   StreamSubscription<List<ScanResult>>? scanResultsSubscription;
 
-  final String DeviceType = "ESP32";
-
   @override
   void initState() {
     super.initState();
     initBle();
     scan();
     checkLoginStatus();
-    connectToBondedDevice();
   }
 
   @override
   void dispose() {
-    scanResultsSubscription?.cancel();
+    scanResultsSubscription?.cancel(); // Cancel the scan results subscription
     super.dispose();
   }
 
@@ -54,8 +52,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void initBle() {
-    StreamSubscription<bool>? isScanningSubscription;
+    // Create a reference to the subscription
+    StreamSubscription<bool> isScanningSubscription;
 
+    // Listen to the isScanning stream and update the _isScanning variable
     isScanningSubscription = flutterBlue.isScanning.listen((isScanning) {
       _isScanning = isScanning;
       if (mounted) {
@@ -63,11 +63,14 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     });
 
+    // Cancel the subscription during dispose()
+    // to break the reference to the State object
+    // and avoid memory leaks
     WidgetsBinding.instance?.addPostFrameCallback((_) {
       if (mounted) {
         setState(() {});
       }
-      isScanningSubscription?.cancel();
+      isScanningSubscription.cancel();
     });
   }
 
@@ -76,19 +79,34 @@ class _HomeScreenState extends State<HomeScreen> {
       scanResultList.clear();
       flutterBlue.startScan(timeout: Duration(seconds: 4));
 
-      scanResultsSubscription = flutterBlue.scanResults.listen((results) {
-        for (ScanResult result in results) {
-          if (result.device.name == DeviceType &&
-              result.device.state != BluetoothDeviceState.connecting &&
-              result.device.state != BluetoothDeviceState.connected) {
-            _connectToDevice(result.device);
-            break;
-          }
-        }
-
-        scanResultList = results.take(3).toList();
+      scanResultsSubscription = flutterBlue.scanResults.listen((results) async {
+        scanResultList = results;
         if (mounted) {
           setState(() {});
+        }
+
+        // Check if previously connected device is available
+        String? connectedDeviceId = await SessionManager.getConnectedDeviceId();
+        if (connectedDeviceId != null) {
+          print(connectedDeviceId);
+
+          ScanResult? connectedDevice = scanResultList.firstWhereOrNull(
+            (result) => result.device.id.id == connectedDeviceId,
+          );
+          print(
+              "Previously connected devices found then showing====================");
+          print(connectedDevice);
+          if (connectedDevice != null) {
+            // Connect to the device
+            await flutterBlue.stopScan();
+            await connectedDevice.device.connect(autoConnect: true);
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) =>
+                      DeviceScreen(device: connectedDevice.device)),
+            );
+          }
         }
       });
     } else {
@@ -96,27 +114,53 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _connectToDevice(BluetoothDevice device) async {
-    await device.connect(autoConnect: true);
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => DeviceScreen(device: device),
+  Widget deviceSignal(ScanResult r) {
+    return Text(r.rssi.toString());
+  }
+
+  Widget deviceMacAddress(ScanResult r) {
+    return Text(r.device.id.id);
+  }
+
+  Widget deviceName(ScanResult r) {
+    String name = '';
+
+    if (r.device.name.isNotEmpty) {
+      name = r.device.name;
+    } else if (r.advertisementData.localName.isNotEmpty) {
+      name = r.advertisementData.localName;
+    } else {
+      name = 'N/A';
+    }
+    return Text(name);
+  }
+
+  Widget leading(ScanResult r) {
+    return const CircleAvatar(
+      child: Icon(
+        Icons.bluetooth,
+        color: Colors.white,
       ),
+      backgroundColor: Colors.cyan,
     );
   }
 
-  Future<void> connectToBondedDevice() async {
-    String? connectedDeviceId = await SessionManager.getConnectedDeviceId();
-    if (connectedDeviceId != null) {
-      ScanResult? connectedDevice = scanResultList.firstWhereOrNull(
-        (result) => result.device.id.id == connectedDeviceId,
-      );
-      if (connectedDevice != null) {
-        await flutterBlue.stopScan();
-        await _connectToDevice(connectedDevice.device);
-      }
-    }
+  void onTap(ScanResult r) {
+    print('${r.device.name}');
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => DeviceScreen(device: r.device)),
+    );
+  }
+
+  Widget listItem(ScanResult r) {
+    return ListTile(
+      onTap: () => onTap(r),
+      leading: leading(r),
+      title: deviceName(r),
+      subtitle: deviceMacAddress(r),
+      trailing: deviceSignal(r),
+    );
   }
 
   @override
@@ -127,25 +171,19 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       drawer: MyDrawer(),
       body: Center(
-        child: _isScanning
-            ? CircularProgressIndicator() // Show a loading indicator while scanning
-            : scanResultList.isEmpty
-                ? Text(
-                    'No devices found near you.') // Show a message if no devices are found
-                : ListView.separated(
-                    itemCount: scanResultList.length,
-                    itemBuilder: (context, index) {
-                      ScanResult result = scanResultList[index];
-                      return ListTile(
-                        title: Text(result.device.name),
-                        subtitle: Text(result.device.id.id),
-                        onTap: () => _connectToDevice(result.device),
-                      );
-                    },
-                    separatorBuilder: (BuildContext context, int index) {
-                      return Divider();
-                    },
-                  ),
+        child: ListView.separated(
+          itemCount: scanResultList.length,
+          itemBuilder: (context, index) {
+            return listItem(scanResultList[index]);
+          },
+          separatorBuilder: (BuildContext context, int index) {
+            return Divider();
+          },
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: scan,
+        child: Icon(_isScanning ? Icons.stop : Icons.search),
       ),
     );
   }

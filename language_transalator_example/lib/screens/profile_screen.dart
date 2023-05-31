@@ -71,12 +71,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
               title: Text(phoneNumber ?? 'PhoneNumber'),
             ),
             SizedBox(height: 16.0),
-            ElevatedButton(
-              onPressed: () {
-                // Navigate to the edit profile screen
-              },
-              child: Text('Edit Profile'),
-            ),
+            // ElevatedButton(
+            //   onPressed: () {
+            //     // Navigate to the edit profile screen
+            //   },
+            //   child: Text('Edit Profile'),
+            // ),
           ],
         ),
       ),

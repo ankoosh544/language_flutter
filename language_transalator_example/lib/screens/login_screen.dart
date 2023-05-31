@@ -29,6 +29,8 @@ class _LoginScreenState extends State<LoginScreen> {
   late SharedPreferences sharedPreferences;
   bool rememberMe = false;
   bool isPasswordVisible = false;
+  String? userName;
+  String? password;
 
   @override
   void initState() {
@@ -92,7 +94,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  void performLogin() {
+  void performLogin() async {
     // Retrieve entered email and password
     String username = usernameTextController.text;
     String password = passwordTextController.text;
@@ -101,18 +103,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
     // If login is successful, set the session data and navigate to the homepage
     if (username.isNotEmpty && password.isNotEmpty) {
-      if (username == "shek" && password == "shek") {
-        SessionManager.setLoggedIn(true); // Set the login status
-
-        saveLoginData(); // Save the login data if "Remember Me" is checked
-
-        _homePage();
-      } else {
-        showValidationError(
-          AppLocalizations.of(context)!.error,
-          AppLocalizations.of(context)!.loginerrormsg,
-        );
-      }
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setString('userName', usernameTextController.text);
+      SessionManager.setLoggedIn(true); // Set the login status
+      saveLoginData(); // Save the login data if "Remember Me" is checked
+      _homePage();
     } else {
       showValidationError(
         AppLocalizations.of(context)!.error,
@@ -182,8 +177,8 @@ class _LoginScreenState extends State<LoginScreen> {
           begin: Alignment.topRight,
           end: Alignment.bottomLeft,
           colors: [
-            Colors.blue,
-            Colors.pink,
+            Color.fromARGB(255, 8, 50, 85),
+            Colors.grey,
           ],
         ),
       ),
@@ -337,7 +332,11 @@ class _LoginScreenState extends State<LoginScreen> {
         border: Border.all(color: Colors.white, width: 2),
         shape: BoxShape.circle,
       ),
-      child: const Icon(Icons.person, color: Colors.white, size: 120),
+      //child: const Icon(Icons.person, color: Colors.white, size: 120),
+      child: Image.asset(
+        'assets/images/Sofia2.png',
+        scale: 1.0,
+      ),
     );
   }
 
@@ -345,7 +344,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return Align(
       alignment: Alignment.topRight,
       child: Padding(
-        padding: const EdgeInsets.all(8.0),
+        padding: const EdgeInsets.only(top: 30, right: 30),
         child: Container(
           child: DropdownButton<Language>(
             underline: SizedBox(),

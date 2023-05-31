@@ -47,18 +47,19 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   }
 
   Future<void> _registerUser(BuildContext context) async {
-    String userName = usernameController.text;
+    String username = usernameController.text;
     String email = emailController.text;
     String password = passwordController.text;
-    if (userName.isEmpty && email.isEmpty && password.isEmpty) {
+    if (username.isEmpty && email.isEmpty && password.isEmpty) {
       showValidationError('Validation Error', "Required Fields are missing");
       return;
     }
 
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString('userName', usernameController.text);
+    await prefs.setString('username', usernameController.text);
     await prefs.setString('email', emailController.text);
     await prefs.setString('phoneNumber', phoneNumberController.text);
+    await prefs.setString('password', passwordController.text);
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => HomeScreen()),
@@ -108,8 +109,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           begin: Alignment.topRight,
           end: Alignment.bottomLeft,
           colors: [
-            Colors.blue,
-            Colors.pink,
+            Color.fromARGB(255, 8, 50, 85),
+            Colors.grey,
           ],
         ),
       ),

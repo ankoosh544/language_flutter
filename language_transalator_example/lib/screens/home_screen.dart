@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:collection/collection.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart' as gen;
 import 'package:language_transalator_example/components/drawar.dart';
 import 'package:language_transalator_example/screens/device_screen.dart';
 import 'package:language_transalator_example/screens/login_screen.dart';
-import 'package:language_transalator_example/utils/session_manager.dart';
-import 'package:collection/collection.dart';
-
-import 'package:flutter_gen/gen_l10n/app_localizations.dart' as gen;
 import 'dart:async';
+import 'package:flutter/cupertino.dart';
+
+import 'package:language_transalator_example/utils/session_manager.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key});
@@ -21,20 +23,21 @@ class _HomeScreenState extends State<HomeScreen> {
   List<ScanResult> scanResultList = [];
   bool _isScanning = false;
   StreamSubscription<List<ScanResult>>? scanResultsSubscription;
+  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
 
-  final String DeviceType = "ESP32";
   @override
   void initState() {
     super.initState();
     initBle();
     scan();
     checkLoginStatus();
-    connectToBondedDevice();
+    initializeNotifications();
   }
 
   @override
   void dispose() {
-    scanResultsSubscription?.cancel();
+    scanResultsSubscription?.cancel(); // Cancel the scan results subscription
     super.dispose();
   }
 
@@ -54,8 +57,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void initBle() {
-    StreamSubscription<bool>? isScanningSubscription;
+    // Create a reference to the subscription
+    StreamSubscription<bool> isScanningSubscription;
 
+    // Listen to the isScanning stream and update the _isScanning variable
     isScanningSubscription = flutterBlue.isScanning.listen((isScanning) {
       _isScanning = isScanning;
       if (mounted) {
@@ -63,11 +68,14 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     });
 
+    // Cancel the subscription during dispose()
+    // to break the reference to the State object
+    // and avoid memory leaks
     WidgetsBinding.instance?.addPostFrameCallback((_) {
       if (mounted) {
         setState(() {});
       }
-      isScanningSubscription?.cancel();
+      isScanningSubscription.cancel();
     });
   }
 
@@ -76,18 +84,35 @@ class _HomeScreenState extends State<HomeScreen> {
       scanResultList.clear();
       flutterBlue.startScan(timeout: Duration(seconds: 4));
 
-      scanResultsSubscription = flutterBlue.scanResults.listen((results) {
-        for (ScanResult result in results) {
-          if (result.device.name == DeviceType &&
-              result.device.state != BluetoothDeviceState.connecting &&
-              result.device.state != BluetoothDeviceState.connected) {
-            _connectToDevice(result.device);
-            break;
-          }
-        }
-
+      scanResultsSubscription = flutterBlue.scanResults.listen((results) async {
+        scanResultList = results;
         if (mounted) {
           setState(() {});
+        }
+
+        // Check if previously connected device is available
+        String? connectedDeviceId = await SessionManager.getConnectedDeviceId();
+        if (connectedDeviceId != null) {
+          print(connectedDeviceId);
+
+          ScanResult? connectedDevice = scanResultList.firstWhereOrNull(
+            (result) => result.device.id.id == connectedDeviceId,
+          );
+          print(
+              "Previously connected devices found then showing====================");
+          print(connectedDevice);
+          if (connectedDevice != null) {
+            // Connect to the device
+            await flutterBlue.stopScan();
+            await connectedDevice.device.connect(autoConnect: true);
+            showNotification('Connected to ${connectedDevice.device.name}');
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) =>
+                      DeviceScreen(device: connectedDevice.device)),
+            );
+          }
         }
       });
     } else {
@@ -95,58 +120,86 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _connectToDevice(BluetoothDevice device) async {
-    if (device.state != BluetoothDeviceState.connected) {
-      await device.connect(autoConnect: true);
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => DeviceScreen(device: device),
-        ),
-      );
+  void initializeNotifications() {
+    var initializationSettingsAndroid =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+    var initializationSettings = InitializationSettings(
+      android: initializationSettingsAndroid,
+    );
+    flutterLocalNotificationsPlugin.initialize(
+      initializationSettings,
+    );
+  }
+
+  Future<void> showNotification(String message) async {
+    var androidPlatformChannelSpecifics = AndroidNotificationDetails(
+      'test_channel_id',
+      'Test Channel',
+      importance: Importance.max,
+      priority: Priority.high,
+      ticker: 'ticker',
+    );
+
+    var platformChannelSpecifics = NotificationDetails(
+      android: androidPlatformChannelSpecifics,
+    );
+    await flutterLocalNotificationsPlugin.show(
+      0,
+      'Bluetooth Notification Testig',
+      message,
+      platformChannelSpecifics,
+      payload: 'notification_payload',
+    );
+  }
+
+  Widget deviceSignal(ScanResult r) {
+    return Text(r.rssi.toString());
+  }
+
+  Widget deviceMacAddress(ScanResult r) {
+    return Text(r.device.id.id);
+  }
+
+  Widget deviceName(ScanResult r) {
+    String name = '';
+
+    if (r.device.name.isNotEmpty) {
+      name = r.device.name;
+    } else if (r.advertisementData.localName.isNotEmpty) {
+      name = r.advertisementData.localName;
     } else {
-      // Device is already connected, handle accordingly (e.g., show a message)
-      print('Device is already connected.');
+      name = 'N/A';
     }
+    return Text(name);
   }
 
-  Future<void> connectToBondedDevice() async {
-    String? connectedDeviceId = await SessionManager.getConnectedDeviceId();
-    if (connectedDeviceId != null) {
-      print(connectedDeviceId);
-      print("Connected Device ID====================================");
-      ScanResult? connectedDevice = scanResultList.firstWhereOrNull(
-        (result) => result.device.id.id == connectedDeviceId,
-      );
-      if (connectedDevice != null) {
-        if (connectedDevice.device.state == BluetoothDeviceState.connected) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) =>
-                  DeviceScreen(device: connectedDevice.device),
-            ),
-          );
-        } else {
-          await connectToDevice(connectedDevice.device);
-        }
-      }
-    }
+  Widget leading(ScanResult r) {
+    return const CircleAvatar(
+      child: Icon(
+        Icons.bluetooth,
+        color: Colors.white,
+      ),
+      backgroundColor: Colors.cyan,
+    );
   }
 
-  Future<void> connectToDevice(BluetoothDevice device) async {
-    try {
-      await device.connect(autoConnect: true);
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => DeviceScreen(device: device),
-        ),
-      );
-    } catch (e) {
-      print('Error connecting to device: $e');
-      // Handle the connection error as needed
-    }
+  void onTap(ScanResult r) {
+    print('${r.device.name}');
+    showNotification('Connected to ${r.device.name}');
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => DeviceScreen(device: r.device)),
+    );
+  }
+
+  Widget listItem(ScanResult r) {
+    return ListTile(
+      onTap: () => onTap(r),
+      leading: leading(r),
+      title: deviceName(r),
+      subtitle: deviceMacAddress(r),
+      trailing: deviceSignal(r),
+    );
   }
 
   @override
@@ -157,25 +210,19 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       drawer: MyDrawer(),
       body: Center(
-        child: _isScanning
-            ? CircularProgressIndicator() // Show a loading indicator while scanning
-            : scanResultList.isEmpty
-                ? Text(
-                    'No devices found near you.') // Show a message if no devices are found
-                : ListView.separated(
-                    itemCount: scanResultList.length,
-                    itemBuilder: (context, index) {
-                      ScanResult result = scanResultList[index];
-                      return ListTile(
-                        title: Text(result.device.name),
-                        subtitle: Text(result.device.id.id),
-                        onTap: () => _connectToDevice(result.device),
-                      );
-                    },
-                    separatorBuilder: (BuildContext context, int index) {
-                      return Divider();
-                    },
-                  ),
+        child: ListView.separated(
+          itemCount: scanResultList.length,
+          itemBuilder: (context, index) {
+            return listItem(scanResultList[index]);
+          },
+          separatorBuilder: (BuildContext context, int index) {
+            return Divider();
+          },
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: scan,
+        child: Icon(_isScanning ? Icons.stop : Icons.search),
       ),
     );
   }
