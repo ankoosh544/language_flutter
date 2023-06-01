@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:language_transalator_example/components/mybutton.dart';
-import 'package:language_transalator_example/components/text_field.dart';
-import 'package:language_transalator_example/screens/home_screen.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:language_transalator_example/screens/login_screen.dart';
+import 'package:language_transalator_example/components/mybutton.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:language_transalator_example/screens/home_screen.dart';
+import 'package:language_transalator_example/screens/login_screen.dart';
 import 'package:language_transalator_example/utils/constants.dart';
 
 class RegistrationScreen extends StatefulWidget {
-  const RegistrationScreen({super.key});
+  const RegistrationScreen({Key? key}) : super(key: key);
 
   @override
   State<RegistrationScreen> createState() => _RegistrationScreenState();
@@ -18,31 +17,15 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController phoneNumberController = TextEditingController();
-
   final TextEditingController passwordController = TextEditingController();
-  PageController pageController = PageController(initialPage: 0);
-  bool isPasswordVisible =
-      false; // Moved outside the _buildLoginScreen() method
-
-  void _homePage() {
-    Navigator.pop(context);
-
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => HomeScreen(),
-      ),
-    );
-  }
+  bool isPasswordVisible = false;
+  String selectedPrefix = '+39';
 
   void _gotoLoginPage() {
     Navigator.pop(context);
-
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => LoginScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => LoginScreen()),
     );
   }
 
@@ -50,21 +33,46 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     String username = usernameController.text;
     String email = emailController.text;
     String password = passwordController.text;
-    if (username.isEmpty && email.isEmpty && password.isEmpty) {
-      showValidationError('Validation Error', "Required Fields are missing");
+    String phoneNumber = selectedPrefix + phoneNumberController.text;
+
+    if (username.isEmpty || email.isEmpty || password.isEmpty) {
+      showValidationError('Validation Error', 'Required fields are missing');
       return;
     }
+
+    if (!validateEmail(email)) {
+      showValidationError('Validation Error', 'Invalid email address');
+      return;
+    }
+
+    // if (!validatePhoneNumber(phoneNumber)) {
+    //   showValidationError('Validation Error', 'Invalid phone number');
+    //   return;
+    // }
 
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setString('username', usernameController.text);
     await prefs.setString('email', emailController.text);
-    await prefs.setString('phoneNumber', phoneNumberController.text);
+    await prefs.setString('phoneNumber', phoneNumber);
     await prefs.setString('password', passwordController.text);
+
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => HomeScreen()),
     );
   }
+
+  bool validateEmail(String email) {
+    String emailRegex = r'^[\w-]+(\.[\w-]+)*@[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*(\.[a-zA-Z]{2,})$';
+    RegExp regex = RegExp(emailRegex);
+    return regex.hasMatch(email);
+  }
+
+  // bool validatePhoneNumber(String phoneNumber) {
+  //   String phoneRegex = r'^\+\d{1,3}-\d{6,16}$';
+  //   RegExp regex = RegExp(phoneRegex);
+  //   return regex.hasMatch(phoneNumber);
+  // }
 
   void showValidationError(String title, String message) {
     showDialog(
@@ -117,7 +125,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: PageView(
-          controller: pageController,
           children: [
             _buildLoginScreen(),
           ],
@@ -134,77 +141,132 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             _icon(),
-            const SizedBox(
-              height: 50,
-            ),
-            MyTextField(
+            const SizedBox(height: 50),
+            TextField(
               controller: usernameController,
-              hintText: AppLocalizations.of(context)!.username,
-              obscureText: false,
-            ),
-            const SizedBox(
-              height: 10,
-            ),
-            MyTextField(
-              controller: emailController,
-              hintText: AppLocalizations.of(context)!.email,
-              obscureText: false,
-            ),
-            const SizedBox(
-              height: 10,
-            ),
-            MyTextField(
-              controller: passwordController,
-              hintText: AppLocalizations.of(context)!.password,
-              obscureText: !isPasswordVisible,
-              suffixIcon: IconButton(
-                icon: Icon(
-                  isPasswordVisible ? Icons.visibility_off : Icons.visibility,
+              style: TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                hintText: AppLocalizations.of(context)!.username,
+                hintStyle: TextStyle(color: Colors.grey),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+                prefixIcon: Icon(
+                  Icons.person,
                   color: Colors.white,
                 ),
-                onPressed: () {
-                  setState(() {
-                    isPasswordVisible = !isPasswordVisible;
-                  });
-                },
               ),
             ),
-            const SizedBox(
-              height: 10,
+            SizedBox(height: 10),
+            TextField(
+              controller: emailController,
+              style: TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                hintText: AppLocalizations.of(context)!.email,
+                hintStyle: TextStyle(color: Colors.grey),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+                prefixIcon: Icon(
+                  Icons.email,
+                  color: Colors.white,
+                ),
+              ),
             ),
-            MyTextField(
-              controller: phoneNumberController,
-              hintText: AppLocalizations.of(context)!.phone,
-              obscureText: false,
+            SizedBox(height: 10),
+            TextField(
+              controller: passwordController,
+              obscureText: !isPasswordVisible,
+              style: TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                hintText: AppLocalizations.of(context)!.password,
+                hintStyle: TextStyle(color: Colors.grey),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+                prefixIcon: Icon(
+                  Icons.lock,
+                  color: Colors.white,
+                ),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    isPasswordVisible ? Icons.visibility_off : Icons.visibility,
+                    color: Colors.white,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      isPasswordVisible = !isPasswordVisible;
+                    });
+                  },
+                ),
+              ),
             ),
-            const SizedBox(
-              height: 50,
+            SizedBox(height: 10),
+            Row(
+              children: [
+                DropdownButton<String>(
+                  value: selectedPrefix,
+                  onChanged: (newValue) {
+                    setState(() {
+                      selectedPrefix = newValue!;
+                    });
+                  },
+                  items: <String>['+39', '+34'].map<DropdownMenuItem<String>>((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value, style: TextStyle(color: Colors.grey)),
+                    );
+                  }).toList(),
+                ),
+                SizedBox(width: 10),
+                Expanded(
+                  child: TextField(
+                    controller: phoneNumberController,
+                    style: TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      hintText: AppLocalizations.of(context)!.phone,
+                      hintStyle: TextStyle(color: Colors.grey),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.white),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-            MyButton(
-              onTap: () => _registerUser(context),
-              text: AppLocalizations.of(context)!.register,
-            ),
-            const SizedBox(
-              height: 15,
-            ),
+            SizedBox(height: 50),
+             MyButton(
+  onTap: () => _registerUser(context),
+  text: AppLocalizations.of(context)!.register,
+),
+
+              
+            SizedBox(height: 15),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text(
-                  "Already hava an Account?",
+                Text(
+                  'Already have an Account?',
                   style: TextStyle(color: Colors.white),
                 ),
-                const SizedBox(
-                  width: 5,
-                ),
+                SizedBox(width: 5),
                 GestureDetector(
-                  onTap: () {
-                    _gotoLoginPage();
-                  },
-                  child: const Text(
-                    "Login",
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold, color: Colors.white),
+                  onTap: _gotoLoginPage,
+                  child: Text(
+                    'Login',
+                    style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
                   ),
                 ),
               ],
@@ -221,7 +283,10 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         border: Border.all(color: Colors.white, width: 2),
         shape: BoxShape.rectangle,
       ),
-      child: const Icon(Icons.app_registration, color: Colors.white, size: 120),
+      child: Image.asset(
+        'assets/images/Sofia2.png',
+        scale: 1.0,
+      ),
     );
   }
 }

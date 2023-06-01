@@ -36,8 +36,11 @@ class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
   Future<void> addEmergencyContact() async {
     String name = nameController.text;
     String phoneNumber = phoneNumberController.text;
-    EmergencyContact contact =
-        EmergencyContact(name: name, phoneNumber: phoneNumber);
+    EmergencyContact contact = EmergencyContact(
+      id: DateTime.now().toString(), // Assign a unique ID to the contact
+      name: name,
+      phoneNumber: phoneNumber,
+    );
 
     await storageService.addEmergencyContact(contact);
     clearTextFields();

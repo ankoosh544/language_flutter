@@ -4,10 +4,18 @@ class EmergencyContact {
   String phoneNumber;
 
   EmergencyContact({
-     this.id = '',
+    this.id = '',
     required this.name,
     required this.phoneNumber,
   });
+
+  factory EmergencyContact.fromMap(Map<String, dynamic> map) {
+    return EmergencyContact(
+      id: map['id'] ?? '',
+      name: map['name'],
+      phoneNumber: map['phoneNumber'],
+    );
+  }
 
   Map<String, dynamic> toMap() {
     return {
@@ -15,13 +23,5 @@ class EmergencyContact {
       'name': name,
       'phoneNumber': phoneNumber,
     };
-  }
-
-  factory EmergencyContact.fromMap(Map<String, dynamic> map) {
-    return EmergencyContact(
-      id: map['id'],
-      name: map['name'],
-      phoneNumber: map['phoneNumber'],
-    );
   }
 }

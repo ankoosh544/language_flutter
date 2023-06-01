@@ -25,21 +25,28 @@ class StorageService {
   }
 
   Future<void> updateEmergencyContact(EmergencyContact contact) async {
-    await storage.ready;
-    List<EmergencyContact> contacts = await getEmergencyContacts();
-    int contactIndex = contacts.indexWhere((c) => c.id == contact.id);
+  await storage.ready;
+  List<EmergencyContact> contacts = await getEmergencyContacts();
+  int contactIndex = contacts.indexWhere((c) => c.id == contact.id);
 
-    if (contactIndex >= 0) {
-      contacts[contactIndex] = contact;
-      storage.setItem('contacts', contacts.map((c) => c.toMap()).toList());
-    }
-  }
-
-  Future<void> deleteEmergencyContact(String id) async {
-    await storage.ready;
-    List<EmergencyContact> contacts = await getEmergencyContacts();
-    contacts.removeWhere((contact) => contact.id == id);
-
+  if (contactIndex >= 0) {
+    contacts[contactIndex] = contact; // Replace the contact at the found index with the updated contact
     storage.setItem('contacts', contacts.map((c) => c.toMap()).toList());
   }
+}
+
+
+  Future<void> deleteEmergencyContact(String id) async {
+  await storage.ready;
+  List<EmergencyContact> contacts = await getEmergencyContacts();
+  
+  // Find the index of the contact with the matching ID
+  int contactIndex = contacts.indexWhere((contact) => contact.id == id);
+
+  if (contactIndex >= 0) {
+    contacts.removeAt(contactIndex); // Remove the contact at the found index
+    storage.setItem('contacts', contacts.map((c) => c.toMap()).toList());
+  }
+}
+
 }

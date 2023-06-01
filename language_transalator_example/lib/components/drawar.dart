@@ -57,7 +57,7 @@ class MyDrawer extends StatelessWidget {
     Future<void> logout() async {
       List<String> keysToClear = [
         SessionManager.isLoggedInKey,
-        SessionManager.isConnectionAudioPlayedKey,
+        SessionManager.isConnectedKey,
         // Add other keys for values you want to clear
       ];
       await SessionManager.clearSpecificValues(keysToClear);

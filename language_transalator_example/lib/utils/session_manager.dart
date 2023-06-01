@@ -14,17 +14,17 @@ class SessionManager {
   static final String _isPresidentEnabledKey = 'isPresidentEnabled';
   static final String _isDisablePeopleEnabledKey = 'isDisablePeopleEnabled';
   static const String _connectedDeviceKey = 'connectedDevice';
-  static final String isConnectionAudioPlayedKey = 'isConnectionAudioPlayed';
+  static final String isConnectedKey = 'isConnected';
 
-  static Future<bool> getConnectionAudioPlayed() async {
+  static Future<bool> getIsConnected() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(isConnectionAudioPlayedKey) ?? false;
+    return prefs.getBool(isConnectedKey) ?? false;
   }
 
-  static Future<void> setConnectionAudioPlayed(
-      bool isConnectionAudioPlayed) async {
+  static Future<void> setIsConnected(
+      bool isConnected) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(isConnectionAudioPlayedKey, isConnectionAudioPlayed);
+    await prefs.setBool(isConnectedKey, isConnected);
   }
 
   static Future<String?> getConnectedDeviceId() async {

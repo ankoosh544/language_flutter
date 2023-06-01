@@ -247,35 +247,63 @@ class _LoginScreenState extends State<LoginScreen> {
             const SizedBox(
               height: 50,
             ),
-            MyTextField(
+            TextField(
               controller: usernameTextController,
-              hintText: AppLocalizations.of(context)!.username,
-              obscureText: false,
+              style: TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                hintText: AppLocalizations.of(context)!.username,
+                hintStyle: TextStyle(color: Colors.grey),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+                prefixIcon: Icon(
+                  Icons.person,
+                  color: Colors.white,
+                ),
+              ),
             ),
+            
             const SizedBox(
               height: 10,
             ),
-            MyTextField(
+            TextField(
               controller: passwordTextController,
-              hintText: AppLocalizations.of(context)!.password,
               obscureText: !isPasswordVisible,
-              suffixIcon: IconButton(
-                icon: Icon(
-                  isPasswordVisible ? Icons.visibility_off : Icons.visibility,
+              style: TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                hintText: AppLocalizations.of(context)!.password,
+                hintStyle: TextStyle(color: Colors.grey),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+                prefixIcon: Icon(
+                  Icons.lock,
                   color: Colors.white,
                 ),
-                onPressed: () {
-                  setState(() {
-                    isPasswordVisible = !isPasswordVisible;
-                  });
-                },
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    isPasswordVisible ? Icons.visibility_off : Icons.visibility,
+                    color: Colors.white,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      isPasswordVisible = !isPasswordVisible;
+                    });
+                  },
+                ),
               ),
             ),
             CheckboxListTile(
               controlAffinity: ListTileControlAffinity.leading,
               contentPadding: EdgeInsets.zero,
               title: Text(
-                'Remember Me',
+                AppLocalizations.of(context)!.rememberMe,
                 style: TextStyle(color: Colors.white),
               ),
               value: rememberMe,

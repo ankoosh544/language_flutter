@@ -2,12 +2,15 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_tts/flutter_tts.dart';
-import 'package:language_transalator_example/components/service_list_item.dart';
+
+import 'package:language_transalator_example/components/welcome_widget.dart';
 import 'package:language_transalator_example/utils/session_manager.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../components/connection_status_widget.dart';
+
+bool isConnected = false; // Global state for connection status
 
 class DeviceScreen extends StatefulWidget {
   DeviceScreen({Key? key, required this.device}) : super(key: key);
@@ -27,8 +30,6 @@ class _DeviceScreenState extends State<DeviceScreen> {
   BluetoothDeviceState deviceState = BluetoothDeviceState.disconnected;
   StreamSubscription<BluetoothDeviceState>? _stateListener;
   List<BluetoothService> bluetoothService = [];
-  bool isAudioEnabled = false;
-  bool isVisualEnabled = false;
 
   final String deviceType = "ESP32";
 
@@ -47,7 +48,22 @@ class _DeviceScreenState extends State<DeviceScreen> {
       }
 
       setBleConnectionState(event);
+      loadSessionValues();
     });
+  }
+
+  Future<void> loadSessionValues() async {
+    isConnected = await SessionManager.getIsConnected();
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    setState(() {
+      bool? isConnectedPref = prefs.getBool('isConnected');
+      if (isConnectedPref != null) {
+        isConnected = isConnectedPref;
+      }
+    });
+    print(isConnected);
+    print("==============LoadSessionValues============================");
   }
 
   @override
@@ -69,15 +85,14 @@ class _DeviceScreenState extends State<DeviceScreen> {
       case BluetoothDeviceState.disconnected:
         setState(() {
           stateText = 'Disconnected';
-          isAudioEnabled = false;
-          isVisualEnabled = false;
+          isConnected = false;
           connectButtonText = 'Connect';
         });
         Map<String, dynamic> settings = await SessionManager.getSettings();
-        if (settings['isAudioEnabled'] && !isAudioEnabled) {
+        if (settings['isAudioEnabled'] && !isConnected) {
           flutterTts.speak(AppLocalizations.of(context)!.bledisc);
         }
-        if (settings['isVisualEnabled'] && !isVisualEnabled) {
+        if (settings['isVisualEnabled'] && !isConnected) {
           showSuccessWindowBox(AppLocalizations.of(context)!.bledisc);
         }
         break;
@@ -97,19 +112,14 @@ class _DeviceScreenState extends State<DeviceScreen> {
         SessionManager.setConnectedDeviceId(deviceId);
 
         Map<String, dynamic> settings = await SessionManager.getSettings();
-        debugPrint("==============audio=================================");
-        debugPrint(isAudioEnabled.toString());
-        debugPrint("===================visual============================");
-        debugPrint(isVisualEnabled.toString());
-        if (settings['isAudioEnabled'] && !isAudioEnabled) {
+        if (settings['isAudioEnabled'] && !isConnected) {
           flutterTts.speak(AppLocalizations.of(context)!.blec);
         }
-        if (settings['isVisualEnabled'] && !isVisualEnabled) {
+        if (settings['isVisualEnabled'] && !isConnected) {
           showSuccessWindowBox(AppLocalizations.of(context)!.blec);
         }
         setState(() {
-          isAudioEnabled = true;
-          isVisualEnabled = true;
+          isConnected = true;
         });
         break;
       case BluetoothDeviceState.connecting:
@@ -234,90 +244,20 @@ class _DeviceScreenState extends State<DeviceScreen> {
           ),
           SizedBox(height: 16),
           if (stateText == "Connected")
-            {
-              WelcomeWidget(
-                onChanged: (value) {
-                  setState(() {
-                    _floorNumber = value;
-                  });
-                },
-                onPressed: () {
-                  if (_floorNumber != null) {
-                    // Do something with the selected floor number here
-                  }
-                },
-              ),
-            },
+            WelcomeWidget(
+              onChanged: (value) {
+                setState(() {
+                  _floorNumber = value;
+                });
+              },
+              onPressed: () {
+                if (_floorNumber != null) {
+                  // Do something with the selected floor number here
+                }
+              },
+            ),
         ],
       ),
-    );
-  }
-}
-
-class WelcomeWidget extends StatefulWidget {
-  final Function(int)? onChanged;
-  final Function()? onPressed;
-
-  const WelcomeWidget({Key? key, this.onChanged, this.onPressed})
-      : super(key: key);
-
-  @override
-  _WelcomeWidgetState createState() => _WelcomeWidgetState();
-}
-
-class _WelcomeWidgetState extends State<WelcomeWidget> {
-  String? userName;
-  TextEditingController _controller = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-
-    loadProfileData();
-  }
-
-  Future<void> loadProfileData() async {
-    userName = await SessionManager.getUsername();
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-
-    setState(() {
-      userName = prefs.getString('username');
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    print(userName);
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text(
-          'Welcome  ' + userName.toString(),
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        SizedBox(height: 16),
-        TextField(
-          controller: _controller,
-          keyboardType: TextInputType.number,
-          onChanged: (value) {
-            if (widget.onChanged != null) {
-              widget.onChanged!(int.tryParse(value) ?? -1);
-            }
-          },
-          decoration: InputDecoration(
-            border: OutlineInputBorder(),
-            labelText: 'Enter Floor Number',
-          ),
-        ),
-        SizedBox(height: 16),
-        ElevatedButton(
-          onPressed: widget.onPressed,
-          child: Text('Confirm'),
-        ),
-      ],
     );
   }
 }

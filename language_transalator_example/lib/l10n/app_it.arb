@@ -33,5 +33,6 @@
   "password" : "Parola d'ordine",
   "save" : "Save",
   "bledisc": "Bluetooth disconnesso",
-  "blec" : "Bluetooth connesso"
+  "blec" : "Bluetooth connesso",
+  "rememberMe" : "Ricordati di me"
 }

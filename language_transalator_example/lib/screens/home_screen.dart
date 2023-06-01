@@ -25,6 +25,9 @@ class _HomeScreenState extends State<HomeScreen> {
   StreamSubscription<List<ScanResult>>? scanResultsSubscription;
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
+  bool isAudioEnabled = false;
+  bool isVisualEnabled = false;
+
 
   @override
   void initState() {
