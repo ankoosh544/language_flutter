@@ -31,8 +31,6 @@ class _DeviceScreenState extends State<DeviceScreen> {
   StreamSubscription<BluetoothDeviceState>? _stateListener;
   List<BluetoothService> bluetoothService = [];
 
-  final String deviceType = "ESP32";
-
   BluetoothCharacteristic? sensorCharacteristic;
   StreamSubscription<List<int>>? _dataSubscription;
 
@@ -89,10 +87,18 @@ class _DeviceScreenState extends State<DeviceScreen> {
           connectButtonText = 'Connect';
         });
         Map<String, dynamic> settings = await SessionManager.getSettings();
-        if (settings['isAudioEnabled'] && !isConnected) {
+        if (settings['isAudioEnabled'] &&
+            !isConnected &&
+            !settings['isVisualEnabled']) {
           flutterTts.speak(AppLocalizations.of(context)!.bledisc);
-        }
-        if (settings['isVisualEnabled'] && !isConnected) {
+        } else if (settings['isVisualEnabled'] &&
+            !isConnected &&
+            !settings['isAudioEnabled']) {
+          showSuccessWindowBox(AppLocalizations.of(context)!.bledisc);
+        } else if (settings['isAudioEnabled'] &&
+            settings['isVisualEnabled'] &&
+            !isConnected) {
+          flutterTts.speak(AppLocalizations.of(context)!.bledisc);
           showSuccessWindowBox(AppLocalizations.of(context)!.bledisc);
         }
         break;

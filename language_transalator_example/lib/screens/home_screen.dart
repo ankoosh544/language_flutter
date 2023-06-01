@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:collection/collection.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart' as gen;
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:language_transalator_example/components/drawar.dart';
 import 'package:language_transalator_example/screens/device_screen.dart';
 import 'package:language_transalator_example/screens/login_screen.dart';
@@ -27,7 +27,7 @@ class _HomeScreenState extends State<HomeScreen> {
       FlutterLocalNotificationsPlugin();
   bool isAudioEnabled = false;
   bool isVisualEnabled = false;
-
+  final String deviceType = "ESP32";
 
   @override
   void initState() {
@@ -96,14 +96,11 @@ class _HomeScreenState extends State<HomeScreen> {
         // Check if previously connected device is available
         String? connectedDeviceId = await SessionManager.getConnectedDeviceId();
         if (connectedDeviceId != null) {
-          print(connectedDeviceId);
-
+          debugPrint(connectedDeviceId.toString());
           ScanResult? connectedDevice = scanResultList.firstWhereOrNull(
             (result) => result.device.id.id == connectedDeviceId,
           );
-          print(
-              "Previously connected devices found then showing====================");
-          print(connectedDevice);
+
           if (connectedDevice != null) {
             // Connect to the device
             await flutterBlue.stopScan();
@@ -135,7 +132,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> showNotification(String message) async {
-    var androidPlatformChannelSpecifics = AndroidNotificationDetails(
+    var androidPlatformChannelSpecifics = const AndroidNotificationDetails(
       'test_channel_id',
       'Test Channel',
       importance: Importance.max,
@@ -156,6 +153,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget deviceSignal(ScanResult r) {
+    debugPrint(r.toString());
+    debugPrint("=============Signal of device=======================");
     return Text(r.rssi.toString());
   }
 
@@ -209,7 +208,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(gen.AppLocalizations.of(context)!.home),
+        title: Text(AppLocalizations.of(context)!.home),
       ),
       drawer: MyDrawer(),
       body: Center(

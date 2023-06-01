@@ -2,9 +2,21 @@
 package="com.example.language_transalator_example">
 
 <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-
-
 <uses-permission android:name="android.permission.CALL_PHONE" />
+
+  <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
+
+    <!-- Needed only if your app makes the device discoverable to Bluetooth
+         devices. -->
+    <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
+
+    <!-- Needed only if your app communicates with already-paired Bluetooth
+         devices. -->
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+
+    <!-- Needed only if your app uses Bluetooth scan results to derive physical location. -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    
     <application
         tools:replace="android:label"
         android:label="language_transalator_example"

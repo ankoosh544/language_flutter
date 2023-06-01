@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-
-import 'package:language_transalator_example/components/text_field.dart';
 import 'package:language_transalator_example/main.dart';
 import 'package:language_transalator_example/screens/emergencty_contacts_screen.dart';
 import 'package:language_transalator_example/screens/home_screen.dart';
@@ -265,7 +263,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
             ),
-            
             const SizedBox(
               height: 10,
             ),

@@ -17,10 +17,11 @@ class AddEditContactScreen extends StatefulWidget {
 class _AddEditContactScreenState extends State<AddEditContactScreen> {
   final StorageService storageService = StorageService();
   final TextEditingController nameController = TextEditingController();
-  final TextEditingController prefixController = TextEditingController(text: "+39");
+  final TextEditingController prefixController =
+      TextEditingController(text: "+39");
   final TextEditingController phoneNumberController = TextEditingController();
 
-  List<String> countryCodes = ["+39", "+91"]; // List of country codes
+  List<String> countryCodes = ["+39", "+34"]; // List of country codes
   String selectedCountryCode = "+39"; // Default selected country code
 
   bool isEditing = false;
@@ -31,7 +32,8 @@ class _AddEditContactScreenState extends State<AddEditContactScreen> {
     if (widget.contact != null) {
       nameController.text = widget.contact!.name;
       prefixController.text = "+39";
-      phoneNumberController.text = widget.contact!.phoneNumber.substring(3); // Remove the "+39" prefix when editing
+      phoneNumberController.text = widget.contact!.phoneNumber
+          .substring(3); // Remove the "+39" prefix when editing
       isEditing = true;
     }
   }
@@ -80,11 +82,12 @@ class _AddEditContactScreenState extends State<AddEditContactScreen> {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: Text('Validation Error'),
-          content: Text('Please enter a valid name and a 10-digit phone number.'),
+          title: const Text('Validation Error'),
+          content: const Text(
+              'Please enter a valid name and a 10-digit phone number.'),
           actions: [
             TextButton(
-              child: Text('OK'),
+              child: const Text('OK'),
               onPressed: () => Navigator.of(context).pop(),
             ),
           ],
@@ -105,17 +108,17 @@ class _AddEditContactScreenState extends State<AddEditContactScreen> {
           children: [
             TextField(
               controller: nameController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Name',
               ),
             ),
-            SizedBox(height: 16.0),
+            const SizedBox(height: 16.0),
             Row(
               children: [
                 Container(
                   width: 100.0,
                   child: Padding(
-                    padding: const EdgeInsets.only(left:8,top: 15),
+                    padding: const EdgeInsets.only(left: 8, top: 15),
                     child: Align(
                       alignment: Alignment.centerLeft,
                       child: DropdownButton<String>(
@@ -126,7 +129,8 @@ class _AddEditContactScreenState extends State<AddEditContactScreen> {
                             prefixController.text = selectedCountryCode;
                           });
                         },
-                        items: countryCodes.map<DropdownMenuItem<String>>((String value) {
+                        items: countryCodes
+                            .map<DropdownMenuItem<String>>((String value) {
                           return DropdownMenuItem<String>(
                             value: value,
                             child: Text(value),
@@ -139,19 +143,20 @@ class _AddEditContactScreenState extends State<AddEditContactScreen> {
                 Expanded(
                   child: TextField(
                     controller: phoneNumberController,
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       labelText: 'Phone Number',
                     ),
                     keyboardType: TextInputType.phone,
                     inputFormatters: [
                       FilteringTextInputFormatter.digitsOnly,
-                      LengthLimitingTextInputFormatter(13), // Limit the input to 10 digits
+                      LengthLimitingTextInputFormatter(
+                          13), // Limit the input to 10 digits
                     ],
                   ),
                 ),
               ],
             ),
-            SizedBox(height: 16.0),
+            const SizedBox(height: 16.0),
             ElevatedButton(
               onPressed: saveContact,
               child: Text(isEditing ? 'Save Changes' : 'Add Contact'),
