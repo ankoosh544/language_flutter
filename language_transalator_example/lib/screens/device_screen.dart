@@ -7,7 +7,7 @@ import 'package:language_transalator_example/components/welcome_widget.dart';
 import 'package:language_transalator_example/utils/session_manager.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+
 import '../components/connection_status_widget.dart';
 
 bool isConnected = false; // Global state for connection status
@@ -46,24 +46,11 @@ class _DeviceScreenState extends State<DeviceScreen> {
       }
 
       setBleConnectionState(event);
-      loadSessionValues();
+     
     });
   }
 
-  Future<void> loadSessionValues() async {
-    isConnected = await SessionManager.getIsConnected();
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-
-    setState(() {
-      bool? isConnectedPref = prefs.getBool('isConnected');
-      if (isConnectedPref != null) {
-        isConnected = isConnectedPref;
-      }
-    });
-    print(isConnected);
-    print("==============LoadSessionValues============================");
-  }
-
+  
   @override
   void dispose() {
     _stateListener?.cancel();
@@ -83,24 +70,26 @@ class _DeviceScreenState extends State<DeviceScreen> {
       case BluetoothDeviceState.disconnected:
         setState(() {
           stateText = 'Disconnected';
-          isConnected = false;
           connectButtonText = 'Connect';
         });
         Map<String, dynamic> settings = await SessionManager.getSettings();
+        isConnected = await SessionManager.getIsConnected();
         if (settings['isAudioEnabled'] &&
-            !isConnected &&
+            isConnected &&
             !settings['isVisualEnabled']) {
           flutterTts.speak(AppLocalizations.of(context)!.bledisc);
         } else if (settings['isVisualEnabled'] &&
-            !isConnected &&
+            isConnected &&
             !settings['isAudioEnabled']) {
           showSuccessWindowBox(AppLocalizations.of(context)!.bledisc);
         } else if (settings['isAudioEnabled'] &&
             settings['isVisualEnabled'] &&
-            !isConnected) {
+            isConnected) {
           flutterTts.speak(AppLocalizations.of(context)!.bledisc);
           showSuccessWindowBox(AppLocalizations.of(context)!.bledisc);
         }
+
+        SessionManager.setIsConnected(false);
         break;
       case BluetoothDeviceState.disconnecting:
         setState(() {
@@ -110,23 +99,24 @@ class _DeviceScreenState extends State<DeviceScreen> {
       case BluetoothDeviceState.connected:
         setState(() {
           stateText = 'Connected';
-
           connectButtonText = 'Disconnect';
         });
         // Store the connected device ID in SessionManager
         String deviceId = widget.device.id.id;
         SessionManager.setConnectedDeviceId(deviceId);
+        isConnected = await SessionManager.getIsConnected();
 
         Map<String, dynamic> settings = await SessionManager.getSettings();
-        if (settings['isAudioEnabled'] && !isConnected) {
+        if (settings['isAudioEnabled'] && !isConnected && !settings['isVisualEnabled']) {
           flutterTts.speak(AppLocalizations.of(context)!.blec);
         }
-        if (settings['isVisualEnabled'] && !isConnected) {
+        else if (settings['isVisualEnabled'] && !isConnected && !settings['isAudioEnabled']) {
+          showSuccessWindowBox(AppLocalizations.of(context)!.blec);
+        }else if(settings['isVisualEnabled'] && settings['isAudioEnabled'] && !isConnected){
+          flutterTts.speak(AppLocalizations.of(context)!.blec);
           showSuccessWindowBox(AppLocalizations.of(context)!.blec);
         }
-        setState(() {
-          isConnected = true;
-        });
+        SessionManager.setIsConnected(true);
         break;
       case BluetoothDeviceState.connecting:
         setState(() {
